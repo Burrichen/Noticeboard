@@ -2,11 +2,11 @@ const {
   ask,
   askSingleKeyNumber,
   askSingleKeyChoice,
-  parseDiceInput,
   parseWholeNumber
 } = require("./input");
 const { QUALITY_TABLE, SIZE_TABLE } = require("./tables");
 const style = require("./style");
+const { generateLegitimateContract, validateLegitimateTables } = require("./legitimateContracts");
 const {
   formatDiceFormula,
   getDiceMaximum,
@@ -22,6 +22,8 @@ function validateTables() {
   for (const quality of QUALITY_TABLE) {
     validatePercentTable(`${quality.name} contract type table`, quality.contractTypeTable);
   }
+
+  validateLegitimateTables();
 }
 
 async function generateNoticeboard(mode) {
@@ -36,8 +38,8 @@ async function generateNoticeboard(mode) {
   for (let i = 1; i <= noticeCountChoice.count; i += 1) {
     const notice =
       mode === "manual"
-        ? await generateNoticeManually(i, qualityChoice.option, sizeChoice.option)
-        : generateNoticeAutomatically(i, qualityChoice.option, sizeChoice.option);
+        ? await generateNoticeManually(i, qualityChoice.option, sizeChoice.option, mode)
+        : await generateNoticeAutomatically(i, qualityChoice.option, sizeChoice.option, mode);
 
     notices.push(notice);
   }
@@ -139,7 +141,7 @@ async function chooseNoticeCount(size, mode) {
   }
 }
 
-function generateNoticeAutomatically(number, quality, size) {
+async function generateNoticeAutomatically(number, quality, size, mode) {
   const noteRoll = rollDie(100);
 
   if (noteRoll <= size.noteChancePercent) {
@@ -152,16 +154,21 @@ function generateNoticeAutomatically(number, quality, size) {
 
   const contractTypeRoll = rollDie(100);
   const contractType = rollOnPercentTable(quality.contractTypeTable, contractTypeRoll);
+  const legitimateContract =
+    contractType === "Legitimate"
+      ? await generateLegitimateContract(mode)
+      : undefined;
 
   return {
     number,
     outcome: contractType,
     noteRoll: `d100 = ${noteRoll}`,
-    contractTypeRoll: `d100 = ${contractTypeRoll}`
+    contractTypeRoll: `d100 = ${contractTypeRoll}`,
+    legitimateContract
   };
 }
 
-async function generateNoticeManually(number, quality, size) {
+async function generateNoticeManually(number, quality, size, mode) {
   console.log("");
   console.log(`${style.dim("---")} ${style.title(`Notice ${number}`)} ${style.dim("---")}`);
 
@@ -176,12 +183,17 @@ async function generateNoticeManually(number, quality, size) {
   }
 
   const contractChoice = await chooseContractType(quality);
+  const legitimateContract =
+    contractChoice.contractType === "Legitimate"
+      ? await generateLegitimateContract(mode)
+      : undefined;
 
   return {
     number,
     outcome: contractChoice.contractType,
     noteRoll: noteChoice.rollText,
-    contractTypeRoll: contractChoice.rollText
+    contractTypeRoll: contractChoice.rollText,
+    legitimateContract
   };
 }
 

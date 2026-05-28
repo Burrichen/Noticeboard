@@ -80,7 +80,10 @@ function readSingleKey() {
         input.setRawMode(Boolean(wasRaw));
       }
 
-      input.pause();
+      // Important:
+      // Do NOT call input.pause() here.
+      // Pausing stdin after a single-key menu can make the next normal
+      // readline prompt fail or let Node exit early.
     }
 
     function onData(buffer) {
