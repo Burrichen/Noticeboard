@@ -71,6 +71,19 @@ const LEGITIMATE_SEEDS = [
 //   text: "your contract text here"
 //   baseRewardGp: 300
 //
+// Employer uses weighted entries:
+//   text: "your employer text here"
+//   rewardModifierPercent: -15
+//   weight: 10
+//
+// Higher weight means more common.
+// Weight does not need to add to 100.
+// Example:
+//   weight: 30  very common
+//   weight: 10  normal
+//   weight: 3   uncommon
+//   weight: 1   rare
+//
 // Other normal tags should use:
 //   text: "your tag text here"
 //   rewardModifierPercent: -15
@@ -102,19 +115,24 @@ const contract = [
 
 const employer = [
   // TODO: Fill in employer option 1.
-  { text: "", rewardModifierPercent: 0 },
+  // weight: 30 = common
+  { text: "", rewardModifierPercent: 0, weight: 30 },
 
   // TODO: Fill in employer option 2.
-  { text: "", rewardModifierPercent: 0 },
+  // weight: 20 = fairly common
+  { text: "", rewardModifierPercent: 0, weight: 20 },
 
   // TODO: Fill in employer option 3.
-  { text: "", rewardModifierPercent: 0 },
+  // weight: 10 = normal
+  { text: "", rewardModifierPercent: 0, weight: 10 },
 
   // TODO: Fill in employer option 4.
-  { text: "", rewardModifierPercent: 0 },
+  // weight: 5 = uncommon
+  { text: "", rewardModifierPercent: 0, weight: 5 },
 
   // TODO: Fill in employer option 5.
-  { text: "", rewardModifierPercent: 0 }
+  // weight: 1 = rare
+  { text: "", rewardModifierPercent: 0, weight: 1 }
 ];
 
 const externalComplication = [
@@ -352,9 +370,46 @@ function chooseTagAutomatically(tagKey) {
   const table = TAG_TABLES[tagKey];
   const filledEntries = table.filter((entry) => isFilledEntry(entry));
   const usableTable = filledEntries.length > 0 ? filledEntries : table;
-  const chosenIndex = rollDie(usableTable.length) - 1;
 
+  if (tagKey === "employer") {
+    return chooseWeightedEntry(usableTable);
+  }
+
+  const chosenIndex = rollDie(usableTable.length) - 1;
   return usableTable[chosenIndex];
+}
+
+function chooseWeightedEntry(entries) {
+  const totalWeight = entries.reduce((sum, entry) => {
+    return sum + getEntryWeight(entry);
+  }, 0);
+
+  if (totalWeight <= 0) {
+    const chosenIndex = rollDie(entries.length) - 1;
+    return entries[chosenIndex];
+  }
+
+  let roll = rollDie(totalWeight);
+
+  for (const entry of entries) {
+    roll -= getEntryWeight(entry);
+
+    if (roll <= 0) {
+      return entry;
+    }
+  }
+
+  return entries[entries.length - 1];
+}
+
+function getEntryWeight(entry) {
+  const weight = Number(entry.weight);
+
+  if (!Number.isFinite(weight) || weight <= 0) {
+    return 1;
+  }
+
+  return Math.floor(weight);
 }
 
 function isFilledEntry(entry) {
@@ -370,11 +425,19 @@ function getTagMenuText(tagKey, entry, index) {
   const rewardText = getCleanText(entry.rewardText);
 
   if (text !== "") {
+    if (tagKey === "employer") {
+      return `${text} ${style.dim(`weight ${getEntryWeight(entry)}`)}`;
+    }
+
     return text;
   }
 
   if (rewardText !== "") {
     return rewardText;
+  }
+
+  if (tagKey === "employer") {
+    return `[empty ${TAG_LABELS[tagKey]} option ${index + 1}] ${style.dim(`weight ${getEntryWeight(entry)}`)}`;
   }
 
   return `[empty ${TAG_LABELS[tagKey]} option ${index + 1}]`;
