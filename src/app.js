@@ -1,8 +1,9 @@
 const { askSingleKeyNumber, pause } = require("./input");
 const { generateNoticeboard } = require("./generator");
+const { loadSettings, saveSettings } = require("./settings");
 const style = require("./style");
 
-let currentMode = "manual";
+let currentMode = loadSettings().mode;
 
 async function runApp() {
   while (true) {
@@ -52,6 +53,10 @@ async function openOptions() {
 
     const choice = await askSingleKeyNumber("Choose an option: ", 1, 4);
 
+    if (choice === 4) {
+      return;
+    }
+
     if (choice === 1) {
       currentMode = "manual";
     }
@@ -64,12 +69,12 @@ async function openOptions() {
       currentMode = "automatic";
     }
 
-    if (choice === 4) {
-      return;
-    }
+    saveSettings({ mode: currentMode });
 
     console.log(style.success(`Mode set to ${formatMode(currentMode)}.`));
-    await pause();
+
+    // No pause here.
+    // The menu refreshes immediately, which avoids readline/raw-input weirdness.
   }
 }
 
