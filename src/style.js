@@ -3,21 +3,27 @@ const colours = {
   bold: "\x1b[1m",
   dim: "\x1b[2m",
 
+  // Dark fantasy palette
+  blood: "\x1b[38;5;124m",
+  ember: "\x1b[38;5;130m",
+  tarnishedGold: "\x1b[38;5;178m",
+  oldBone: "\x1b[38;5;223m",
+  graveAsh: "\x1b[38;5;246m",
+  witchGreen: "\x1b[38;5;65m",
+  corpseGreen: "\x1b[38;5;108m",
+  midnightBlue: "\x1b[38;5;67m",
+  cursedViolet: "\x1b[38;5;97m",
+  ghostCyan: "\x1b[38;5;109m",
+  rust: "\x1b[38;5;166m",
+
+  // Basic fallbacks
   red: "\x1b[31m",
   green: "\x1b[32m",
   yellow: "\x1b[33m",
   blue: "\x1b[34m",
   magenta: "\x1b[35m",
   cyan: "\x1b[36m",
-  white: "\x1b[37m",
-
-  brightRed: "\x1b[91m",
-  brightGreen: "\x1b[92m",
-  brightYellow: "\x1b[93m",
-  brightBlue: "\x1b[94m",
-  brightMagenta: "\x1b[95m",
-  brightCyan: "\x1b[96m",
-  brightWhite: "\x1b[97m"
+  white: "\x1b[37m"
 };
 
 function colour(text, colourCode) {
@@ -33,47 +39,51 @@ function dim(text) {
 }
 
 function title(text) {
-  return colour(bold(text), colours.brightCyan);
+  return colour(bold(text), colours.oldBone);
+}
+
+function subtitle(text) {
+  return colour(text, colours.graveAsh);
 }
 
 function menuNumber(number) {
-  return colour(`${number}.`, colours.brightYellow);
+  return colour(`${number}.`, colours.tarnishedGold);
 }
 
-function optionName(text, colourCode = colours.white) {
+function optionName(text, colourCode = colours.oldBone) {
   return colour(bold(text), colourCode);
 }
 
 function prompt(text) {
-  return colour(text, colours.brightGreen);
+  return colour(text, colours.tarnishedGold);
 }
 
 function error(text) {
-  return colour(text, colours.brightRed);
+  return colour(text, colours.blood);
 }
 
 function success(text) {
-  return colour(text, colours.brightGreen);
+  return colour(text, colours.witchGreen);
 }
 
 function note(text) {
-  return colour(text, colours.brightMagenta);
+  return colour(text, colours.cursedViolet);
 }
 
 function illegal(text) {
-  return colour(text, colours.brightRed);
+  return colour(text, colours.blood);
 }
 
 function illegitimate(text) {
-  return colour(text, colours.brightYellow);
+  return colour(text, colours.rust);
 }
 
 function legitimate(text) {
-  return colour(text, colours.brightGreen);
+  return colour(text, colours.corpseGreen);
 }
 
 function line() {
-  return colour("=".repeat(35), colours.cyan);
+  return colour("=".repeat(35), colours.graveAsh);
 }
 
 function contractType(text) {
@@ -102,6 +112,7 @@ module.exports = {
   bold,
   dim,
   title,
+  subtitle,
   menuNumber,
   optionName,
   prompt,
