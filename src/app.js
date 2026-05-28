@@ -1,4 +1,4 @@
-const { askNumber, pause } = require("./input");
+const { askSingleKeyNumber, pause } = require("./input");
 const { generateNoticeboard } = require("./generator");
 const style = require("./style");
 
@@ -8,7 +8,7 @@ async function runApp() {
   while (true) {
     printMainMenu();
 
-    const choice = await askNumber("Choose an option: ", 1, 3);
+    const choice = await askSingleKeyNumber("Choose an option: ", 1, 3);
 
     if (choice === 1) {
       await startGenerator();
@@ -44,13 +44,13 @@ async function openOptions() {
     console.log(style.line());
     console.log(`${style.dim("Current mode:")} ${colourMode(currentMode)}`);
     console.log("");
-    console.log(`${style.menuNumber(1)} ${style.optionName("Manual", style.colours.brightBlue)}`);
-    console.log(`${style.menuNumber(2)} ${style.optionName("Semi-automatic", style.colours.brightMagenta)}`);
-    console.log(`${style.menuNumber(3)} ${style.optionName("Automatic", style.colours.brightGreen)}`);
-    console.log(`${style.menuNumber(4)} ${style.optionName("Back", style.colours.white)}`);
+    console.log(`${style.menuNumber(1)} ${style.optionName("Manual", style.colours.midnightBlue)}`);
+    console.log(`${style.menuNumber(2)} ${style.optionName("Semi-automatic", style.colours.cursedViolet)}`);
+    console.log(`${style.menuNumber(3)} ${style.optionName("Automatic", style.colours.witchGreen)}`);
+    console.log(`${style.menuNumber(4)} ${style.optionName("Back", style.colours.oldBone)}`);
     console.log("");
 
-    const choice = await askNumber("Choose an option: ", 1, 4);
+    const choice = await askSingleKeyNumber("Choose an option: ", 1, 4);
 
     if (choice === 1) {
       currentMode = "manual";
@@ -81,9 +81,9 @@ function printMainMenu() {
   console.log(style.line());
   console.log(`${style.dim("Current mode:")} ${colourMode(currentMode)}`);
   console.log("");
-  console.log(`${style.menuNumber(1)} ${style.optionName("Start", style.colours.brightGreen)}`);
-  console.log(`${style.menuNumber(2)} ${style.optionName("Options", style.colours.brightCyan)}`);
-  console.log(`${style.menuNumber(3)} ${style.optionName("Exit", style.colours.brightRed)}`);
+  console.log(`${style.menuNumber(1)} ${style.optionName("Start", style.colours.witchGreen)}`);
+  console.log(`${style.menuNumber(2)} ${style.optionName("Options", style.colours.ghostCyan)}`);
+  console.log(`${style.menuNumber(3)} ${style.optionName("Exit", style.colours.blood)}`);
   console.log("");
 }
 
@@ -93,9 +93,9 @@ function printNoticeboardResult(result) {
   console.log(style.title(" Generated Noticeboard"));
   console.log(style.line());
   console.log(`${style.dim("Mode:")} ${colourMode(result.mode)}`);
-  console.log(`${style.dim("Quality:")} ${style.optionName(result.quality.name, style.colours.brightCyan)}`);
-  console.log(`${style.dim("Size:")} ${style.optionName(result.size.name, style.colours.brightYellow)}`);
-  console.log(`${style.dim("Notice count:")} ${style.bold(String(result.noticeCount))}`);
+  console.log(`${style.dim("Quality:")} ${style.optionName(result.quality.name, style.colours.oldBone)}`);
+  console.log(`${style.dim("Size:")} ${style.optionName(result.size.name, style.colours.tarnishedGold)}`);
+  console.log(`${style.dim("Notice count:")} ${style.optionName(String(result.noticeCount), style.colours.oldBone)}`);
   console.log("");
   console.log(style.title("Notices"));
 
@@ -108,14 +108,14 @@ function printNoticeboardResult(result) {
 
 function colourMode(mode) {
   if (mode === "manual") {
-    return style.optionName("Manual", style.colours.brightBlue);
+    return style.optionName("Manual", style.colours.midnightBlue);
   }
 
   if (mode === "semiAutomatic") {
-    return style.optionName("Semi-automatic", style.colours.brightMagenta);
+    return style.optionName("Semi-automatic", style.colours.cursedViolet);
   }
 
-  return style.optionName("Automatic", style.colours.brightGreen);
+  return style.optionName("Automatic", style.colours.witchGreen);
 }
 
 function formatMode(mode) {

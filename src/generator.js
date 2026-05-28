@@ -1,4 +1,10 @@
-const { ask, parseDiceInput, parseWholeNumber } = require("./input");
+const {
+  ask,
+  askSingleKeyNumber,
+  askSingleKeyChoice,
+  parseDiceInput,
+  parseWholeNumber
+} = require("./input");
 const { QUALITY_TABLE, SIZE_TABLE } = require("./tables");
 const style = require("./style");
 const {
@@ -61,32 +67,13 @@ async function chooseQuality(mode) {
     };
   }
 
-  while (true) {
-    const answer = await ask("Choose quality: ");
+  const chosenId = await askSingleKeyNumber("Choose quality: ", 1, 5);
+  const result = QUALITY_TABLE.find((quality) => quality.id === chosenId);
 
-    const d10Roll = parseDiceInput(answer, 10);
-
-    if (d10Roll !== null) {
-      const result = getMasterTableResult(QUALITY_TABLE, d10Roll);
-
-      return {
-        option: result,
-        method: `manual d10 = ${d10Roll}`
-      };
-    }
-
-    const chosenId = parseWholeNumber(answer);
-    const result = QUALITY_TABLE.find((quality) => quality.id === chosenId);
-
-    if (result !== undefined) {
-      return {
-        option: result,
-        method: "manual selection"
-      };
-    }
-
-    console.log(style.error("Invalid quality choice."));
-  }
+  return {
+    option: result,
+    method: "manual selection"
+  };
 }
 
 async function chooseSize(mode) {
@@ -102,32 +89,13 @@ async function chooseSize(mode) {
     };
   }
 
-  while (true) {
-    const answer = await ask("Choose size: ");
+  const chosenId = await askSingleKeyNumber("Choose size: ", 1, 5);
+  const result = SIZE_TABLE.find((size) => size.id === chosenId);
 
-    const d10Roll = parseDiceInput(answer, 10);
-
-    if (d10Roll !== null) {
-      const result = getMasterTableResult(SIZE_TABLE, d10Roll);
-
-      return {
-        option: result,
-        method: `manual d10 = ${d10Roll}`
-      };
-    }
-
-    const chosenId = parseWholeNumber(answer);
-    const result = SIZE_TABLE.find((size) => size.id === chosenId);
-
-    if (result !== undefined) {
-      return {
-        option: result,
-        method: "manual selection"
-      };
-    }
-
-    console.log(style.error("Invalid size choice."));
-  }
+  return {
+    option: result,
+    method: "manual selection"
+  };
 }
 
 async function chooseNoticeCount(size, mode) {
@@ -218,97 +186,70 @@ async function generateNoticeManually(number, quality, size) {
 }
 
 async function chooseNoteOrContract(size) {
-  while (true) {
-    const answer = await ask("Note or contract? N/C, or Enter to roll: ");
+  const choice = await askSingleKeyChoice("Note or contract? N/C, or R to roll: ", [
+    "n",
+    "c",
+    "r"
+  ]);
 
-    if (answer === "") {
-      const roll = rollDie(100);
-
-      return {
-        isNote: roll <= size.noteChancePercent,
-        rollText: `automatic d100 = ${roll}`
-      };
-    }
-
-    const normalized = answer.toLowerCase();
-
-    if (normalized === "n" || normalized === "note") {
-      return {
-        isNote: true,
-        rollText: "manual selection"
-      };
-    }
-
-    if (normalized === "c" || normalized === "contract") {
-      return {
-        isNote: false,
-        rollText: "manual selection"
-      };
-    }
-
-    const d100Roll = parseDiceInput(answer, 100);
-
-    if (d100Roll !== null) {
-      return {
-        isNote: d100Roll <= size.noteChancePercent,
-        rollText: `manual d100 = ${d100Roll}`
-      };
-    }
-
-    console.log(style.error("Invalid choice."));
+  if (choice === "n") {
+    return {
+      isNote: true,
+      rollText: "manual selection"
+    };
   }
+
+  if (choice === "c") {
+    return {
+      isNote: false,
+      rollText: "manual selection"
+    };
+  }
+
+  const roll = rollDie(100);
+
+  return {
+    isNote: roll <= size.noteChancePercent,
+    rollText: `automatic d100 = ${roll}`
+  };
 }
 
 async function chooseContractType(quality) {
-  while (true) {
-    console.log("");
-    console.log(`${style.menuNumber(1)} ${style.illegal("Illegal")}`);
-    console.log(`${style.menuNumber(2)} ${style.illegitimate("Illegitimate")}`);
-    console.log(`${style.menuNumber(3)} ${style.legitimate("Legitimate")}`);
+  console.log("");
+  console.log(`${style.menuNumber(1)} ${style.illegal("Illegal")}`);
+  console.log(`${style.menuNumber(2)} ${style.illegitimate("Illegitimate")}`);
+  console.log(`${style.menuNumber(3)} ${style.legitimate("Legitimate")}`);
+  console.log(`${style.menuNumber(4)} ${style.optionName("Roll", style.colours.tarnishedGold)}`);
 
-    const answer = await ask("Choose contract type, or Enter to roll: ");
+  const answer = await askSingleKeyNumber("Choose contract type: ", 1, 4);
 
-    if (answer === "") {
-      const roll = rollDie(100);
-
-      return {
-        contractType: rollOnPercentTable(quality.contractTypeTable, roll),
-        rollText: `automatic d100 = ${roll}`
-      };
-    }
-
-    const d100Roll = parseDiceInput(answer, 100);
-
-    if (d100Roll !== null) {
-      return {
-        contractType: rollOnPercentTable(quality.contractTypeTable, d100Roll),
-        rollText: `manual d100 = ${d100Roll}`
-      };
-    }
-
-    if (answer === "1") {
-      return {
-        contractType: "Illegal",
-        rollText: "manual selection"
-      };
-    }
-
-    if (answer === "2") {
-      return {
-        contractType: "Illegitimate",
-        rollText: "manual selection"
-      };
-    }
-
-    if (answer === "3") {
-      return {
-        contractType: "Legitimate",
-        rollText: "manual selection"
-      };
-    }
-
-    console.log(style.error("Invalid contract type."));
+  if (answer === 1) {
+    return {
+      contractType: "Illegal",
+      rollText: "manual selection"
+    };
   }
+
+  if (answer === 2) {
+    return {
+      contractType: "Illegitimate",
+      rollText: "manual selection"
+    };
+  }
+
+  if (answer === 3) {
+    return {
+      contractType: "Legitimate",
+      rollText: "manual selection"
+    };
+  }
+
+  const roll = rollDie(100);
+
+  return {
+    contractType: rollOnPercentTable(quality.contractTypeTable, roll),
+    rollText: `automatic d100 = ${roll}`
+  };
 }
 
 function printQualityTable() {
@@ -321,7 +262,7 @@ function printQualityTable() {
     const colour = getQualityColour(quality.name);
 
     console.log(`${style.menuNumber(quality.id)} ${style.optionName(quality.name, colour)}`);
-    console.log(`   ${style.dim(quality.description)}`);
+    console.log(`   ${style.subtitle(quality.description)}`);
   }
 
   console.log("");
@@ -337,7 +278,7 @@ function printSizeTable() {
     const colour = getSizeColour(size.id);
 
     console.log(`${style.menuNumber(size.id)} ${style.optionName(size.name, colour)}`);
-    console.log(`   ${style.dim(size.description)}`);
+    console.log(`   ${style.subtitle(size.description)}`);
   }
 
   console.log("");
@@ -345,42 +286,42 @@ function printSizeTable() {
 
 function getQualityColour(name) {
   if (name === "Underground") {
-    return style.colours.brightRed;
+    return style.colours.blood;
   }
 
   if (name === "Decrepit") {
-    return style.colours.yellow;
+    return style.colours.rust;
   }
 
   if (name === "Standard") {
-    return style.colours.white;
+    return style.colours.oldBone;
   }
 
   if (name === "Good") {
-    return style.colours.brightGreen;
+    return style.colours.witchGreen;
   }
 
-  return style.colours.brightCyan;
+  return style.colours.ghostCyan;
 }
 
 function getSizeColour(id) {
   if (id === 1) {
-    return style.colours.brightBlue;
+    return style.colours.midnightBlue;
   }
 
   if (id === 2) {
-    return style.colours.cyan;
+    return style.colours.ghostCyan;
   }
 
   if (id === 3) {
-    return style.colours.white;
+    return style.colours.oldBone;
   }
 
   if (id === 4) {
-    return style.colours.brightYellow;
+    return style.colours.tarnishedGold;
   }
 
-  return style.colours.brightMagenta;
+  return style.colours.cursedViolet;
 }
 
 module.exports = {
