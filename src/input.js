@@ -73,24 +73,27 @@ function readSingleKey() {
   return new Promise((resolve) => {
     const wasRaw = input.isRaw;
 
+    function cleanup() {
+      input.off("data", onData);
+
+      if (input.isTTY) {
+        input.setRawMode(Boolean(wasRaw));
+      }
+
+      input.pause();
+    }
+
+    function onData(buffer) {
+      cleanup();
+      resolve(buffer.toString("utf8"));
+    }
+
     if (input.isTTY) {
       input.setRawMode(true);
     }
 
     input.resume();
-
-    const onData = (buffer) => {
-      if (input.isTTY) {
-        input.setRawMode(wasRaw);
-      }
-
-      input.pause();
-      input.off("data", onData);
-
-      resolve(buffer.toString("utf8"));
-    };
-
-    input.on("data", onData);
+    input.once("data", onData);
   });
 }
 
