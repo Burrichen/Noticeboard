@@ -1,16 +1,10 @@
 {
-  "name": "dnd-noticeboard-generator",
+  "name": "dnd-noticeboard-generator-js",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
+  "description": "A terminal-based DND noticeboard generator.",
+  "main": "src/main.js",
   "scripts": {
-    "dev": "tsx src/main.ts",
-    "build": "tsc",
-    "start": "node dist/main.js"
-  },
-  "devDependencies": {
-    "@types/node": "latest",
-    "tsx": "latest",
-    "typescript": "latest"
+    "start": "node src/main.js"
   }
 }
