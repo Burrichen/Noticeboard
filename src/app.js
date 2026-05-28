@@ -72,9 +72,6 @@ async function openOptions() {
     saveSettings({ mode: currentMode });
 
     console.log(style.success(`Mode set to ${formatMode(currentMode)}.`));
-
-    // No pause here.
-    // The menu refreshes immediately, which avoids readline/raw-input weirdness.
   }
 }
 
@@ -106,9 +103,20 @@ function printNoticeboardResult(result) {
 
   for (const notice of result.notices) {
     console.log(`${style.menuNumber(notice.number)} ${style.contractType(notice.outcome)}`);
+
+    if (notice.legitimateContract !== undefined) {
+      printLegitimateContract(notice.legitimateContract);
+    }
   }
 
   console.log("");
+}
+
+function printLegitimateContract(contract) {
+  console.log(`   ${style.subtitle(contract.sentence)}`);
+  console.log(
+    `   ${style.optionName("Reward:", style.colours.tarnishedGold)} ${style.optionName(contract.rewardText, style.colours.oldBone)}`
+  );
 }
 
 function colourMode(mode) {
