@@ -4,6 +4,8 @@ const style = require("./style");
 
 // Your example says the final reward gets a random drift between -10 and +10.
 // Change this to 25 later if you decide you meant a full 25% drift range.
+//
+// For testing reward maths clearly, temporarily set this to 0.
 const REWARD_DRIFT_RANGE_PERCENT = 10;
 
 // TODO: Edit these seed chances later.
@@ -71,6 +73,19 @@ const LEGITIMATE_SEEDS = [
 //   text: "your contract text here"
 //   baseRewardGp: 300
 //
+// Employer uses weighted entries:
+//   text: "your employer text here"
+//   rewardModifierPercent: -15
+//   weight: 10
+//
+// Higher weight means more common.
+// Weight does not need to add to 100.
+// Example:
+//   weight: 30  very common
+//   weight: 10  normal
+//   weight: 3   uncommon
+//   weight: 1   rare
+//
 // Other normal tags should use:
 //   text: "your tag text here"
 //   rewardModifierPercent: -15
@@ -84,105 +99,115 @@ const LEGITIMATE_SEEDS = [
 // they will be ignored unless the whole table is blank.
 
 const contract = [
-  // TODO: Fill in contract option 1.
-  { text: "", baseRewardGp: 0 },
+    // TODO: Contract Area
+  { text: "work a job", baseRewardGp: 10, weight: 30 },
+  { text: "escort an individual", baseRewardGp: 25, weight: 20 },
+  { text: "deliver a sealed letter", baseRewardGp: 20, weight: 20 },
+  { text: "deliver an object of importance", baseRewardGp: 50, weight: 10 },
+  { text: "guard a location overnight", baseRewardGp: 20, weight: 10 },
+  { text: "escort a caravan", baseRewardGp: 40, weight: 10 },
+  { text: "carry supplies to an isolated house, farm or outpost", baseRewardGp: 20, weight: 5 },
+  { text: "find a missing animal", baseRewardGp: 5, weight: 5 },
+  { text: "retrieve a wagon, cart or boat stranded off-route", baseRewardGp: 30, weight: 5 },
+  { text: "escort a disliked official, collector or guild agent through town", baseRewardGp: 50, weight: 1 },
 
-  // TODO: Fill in contract option 2.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in contract option 3.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in contract option 5.
-  { text: "", baseRewardGp: 0 }
 ];
 
 const employer = [
-  // TODO: Fill in employer option 1.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in employer option 2.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in employer option 3.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in employer option 4.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in employer option 5.
-  { text: "", rewardModifierPercent: 0 }
+      // TODO: Employer Area
+    // weight: 20 = fairly common
+  { text: "Local Merchant", rewardModifierPercent: 5, weight: 20 },
+  { text: "Farmer", rewardModifierPercent: -5, weight: 20 },
+  { text: "Local Resident", rewardModifierPercent: -10, weight: 20 },
+  // weight: 10 = normal
+  { text: "Town Guard", rewardModifierPercent: 0, weight: 10 },
+  { text: "Shopkeeper", rewardModifierPercent: 5, weight: 10 },
+  { text: "Innkeeper", rewardModifierPercent: 0, weight: 10 },
+  // weight: 5 = uncommon
+  { text: "Retired Adventurer", rewardModifierPercent: 0, weight: 5 },
+  { text: "Guild Representative", rewardModifierPercent: 10, weight: 5 },
+  { text: "Village Elder", rewardModifierPercent: -10, weight: 5 },
+  { text: "Council Member", rewardModifierPercent: 5, weight: 5 },
+  { text: "Priest", rewardModifierPercent: -10, weight: 5 },
+  { text: "Caravan Master", rewardModifierPercent: 5, weight: 5 },
+  { text: "Nobel's Steward", rewardModifierPercent: 5, weight: 5 },
+  { text: "Artisan", rewardModifierPercent: 15, weight: 5 },
+  { text: "Dockworker, ferryman or stablemaster", rewardModifierPercent: 0, weight: 5 },
+  { text: "Scholar", rewardModifierPercent: -5, weight: 5 },
+  { text: "Courier", rewardModifierPercent: 0, weight: 5 },
+  { text: "Scribe", rewardModifierPercent: 5, weight: 5 },
+  { text: "Criminal Contact", rewardModifierPercent: 0, weight: 5 },
+  { text: "Healer", rewardModifierPercent: -5, weight: 5 },
+  // weight: 1 = rare
+  { text: "Nobel", rewardModifierPercent: 75, weight: 1 },
+  { text: "Anonymous Patron", rewardModifierPercent: 25, weight: 1 },
+  { text: "Cursed Individual", rewardModifierPercent: 25, weight: 1 },
+  { text: "Cult Member", rewardModifierPercent: 10, weight: 1 }
 ];
 
 const externalComplication = [
-  // TODO: Fill in external complication option 1.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 2.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 3.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 4.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 5.
-  { text: "", rewardModifierPercent: 0 }
+  // TODO: External Complication Area
+  { text: "the job must be completed in a limited timeframe", baseRewardGp: 25 },
+  { text: "the employer has no information about the contract", rewardModifierPercent: 10 },
+  { text: "the employer has unwittingly given false information", rewardModifierPercent: 0 },
+  { text: "another group has already accepted the contract", rewardModifierPercent: -10 },
+  { text: "an alternative group has an active interest in the contract not being fulfilled", rewardModifierPercent: 0 },
+  { text: "another group has already accepted the contract", rewardModifierPercent: 0 },
+  { text: "the job attracts unwanted public attention", rewardModifierPercent: 10 },
+  { text: "the contract requires following a local custom", rewardModifierPercent: 5 },
+  { text: "the employer has a strange reputation", rewardModifierPercent: 5 },
+  { text: "the job is merely one part of a much larger ", rewardModifierPercent: 0 }
 ];
 
 const dangerousContract = [
-  // TODO: Fill in dangerous contract option 1.
-  { text: "", baseRewardGp: 0 },
+  // TODO: Dangerous Contract Area
+  { text: "hunt a monster that's been attacking travellers", rewardModifierPercent: 100 },
+  { text: "drive off a beast that's been threatening livestock", baseRewardGp: 100 },
+  { text: "clear creatures out of an abandoned building", baseRewardGp: 100 },
+  { text: "exorcise a ghost from a home, graveyard, shrine or inn", baseRewardGp: 200 },
+  { text: "rescue someone trapped in a dangerous location", baseRewardGp: 200 },
+  { text: "destroy a brood den", baseRewardGp: 125 },
+  { text: "protect a caravan, farm or outpost from incoming attack", baseRewardGp: 150 },
+  { text: "capture a dangerous outlaw alive", baseRewardGp: 125 }, 
+  { text: "kill a dangerous outlaw", baseRewardGp: 75 }, 
+  { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125 }, 
+  { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150 }, 
+  { text: "guard a ritual. burial or ceremony from hostile forces", baseRewardGp: 125 }, 
+  { text: "break into a dangerous location to recover captives or proof", baseRewardGp: 300 },
+  { text: "destroy a cursed object, relic or shrine", baseRewardGp: 150 }, 
 
-  // TODO: Fill in dangerous contract option 2.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in dangerous contract option 3.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in dangerous contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in dangerous contract option 5.
-  { text: "", baseRewardGp: 0 }
+  { text: "survive a night in a cursed or haunted location", baseRewardGp: 300 }
 ];
 
 const weirdContract = [
-  // TODO: Fill in weird contract option 1.
+  // TODO: Weird Contract Area
+  { text: "give a ghost one last day of fun", baseRewardGp: 250, weight: 1 },
+
+  { text: "investigate and end a curse affecting a person, family, or place", baseRewardGp: 300 },
+
   { text: "", baseRewardGp: 0 },
 
-  // TODO: Fill in weird contract option 2.
   { text: "", baseRewardGp: 0 },
 
-  // TODO: Fill in weird contract option 3.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in weird contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in weird contract option 5.
   { text: "", baseRewardGp: 0 }
 ];
 
 const socialContract = [
-  // TODO: Fill in social contract option 1.
-  { text: "", baseRewardGp: 0 },
+  // TODO: Social Contract Area
+  { text: "mediate a dispute between two families", baseRewardGp: 100, weight: 5 },
+  { text: "deliver an apology on someone else's behalf", baseRewardGp: 25, weight: 5 },
+  { text: "collect a debt without causing", baseRewardGp: 25, weight: 5 },
+  { text: "flatter a foreign dignitary", baseRewardGp: 75, weight: 5 },
 
-  // TODO: Fill in social contract option 2.
-  { text: "", baseRewardGp: 0 },
+  { text: "negotiate a truce between a guild and its workers", baseRewardGp: 125, weight: 3 },
+  { text: "act as a guild representative on a sensitive matter", baseRewardGp: 125, weight: 3 },
 
-  // TODO: Fill in social contract option 3.
-  { text: "", baseRewardGp: 0 },
+  { text: "deliver a confession on someone else's behalf", baseRewardGp: 30, weight: 2 },
+  { text: "serve as a neutral witness for a contract", baseRewardGp: 10, weight: 2 },
+  { text: "serve as a neutral witness for a wedding", baseRewardGp: 10, weight: 2 },
+  { text: "chaperone a troublesome rich kid for the day", baseRewardGp: 150, weight: 2 },
 
-  // TODO: Fill in social contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in social contract option 5.
-  { text: "", baseRewardGp: 0 }
+  { text: "chaperone a troublesome noble guest for the day", baseRewardGp: 200, weight: 1 }
 ];
 
 const investigationContract = [
@@ -352,9 +377,46 @@ function chooseTagAutomatically(tagKey) {
   const table = TAG_TABLES[tagKey];
   const filledEntries = table.filter((entry) => isFilledEntry(entry));
   const usableTable = filledEntries.length > 0 ? filledEntries : table;
-  const chosenIndex = rollDie(usableTable.length) - 1;
 
+  if (tagKey === "employer") {
+    return chooseWeightedEntry(usableTable);
+  }
+
+  const chosenIndex = rollDie(usableTable.length) - 1;
   return usableTable[chosenIndex];
+}
+
+function chooseWeightedEntry(entries) {
+  const totalWeight = entries.reduce((sum, entry) => {
+    return sum + getEntryWeight(entry);
+  }, 0);
+
+  if (totalWeight <= 0) {
+    const chosenIndex = rollDie(entries.length) - 1;
+    return entries[chosenIndex];
+  }
+
+  let roll = rollDie(totalWeight);
+
+  for (const entry of entries) {
+    roll -= getEntryWeight(entry);
+
+    if (roll <= 0) {
+      return entry;
+    }
+  }
+
+  return entries[entries.length - 1];
+}
+
+function getEntryWeight(entry) {
+  const weight = Number(entry.weight);
+
+  if (!Number.isFinite(weight) || weight <= 0) {
+    return 1;
+  }
+
+  return Math.floor(weight);
 }
 
 function isFilledEntry(entry) {
@@ -370,11 +432,19 @@ function getTagMenuText(tagKey, entry, index) {
   const rewardText = getCleanText(entry.rewardText);
 
   if (text !== "") {
+    if (tagKey === "employer") {
+      return `${text} ${style.dim(`weight ${getEntryWeight(entry)}`)}`;
+    }
+
     return text;
   }
 
   if (rewardText !== "") {
     return rewardText;
+  }
+
+  if (tagKey === "employer") {
+    return `[empty ${TAG_LABELS[tagKey]} option ${index + 1}] ${style.dim(`weight ${getEntryWeight(entry)}`)}`;
   }
 
   return `[empty ${TAG_LABELS[tagKey]} option ${index + 1}]`;
@@ -448,32 +518,71 @@ function calculateReward(seed, tags) {
     };
   }
 
-  const totalModifierPercent = seed.tagKeys
+  const totalTagModifierPercent = seed.tagKeys
     .filter((tagKey) => tagKey !== contractTagKey)
     .reduce((sum, tagKey) => {
       return sum + getRewardModifier(tags[tagKey]);
     }, 0);
 
-  const afterTagModifiers = Math.floor(
-    baseRewardGp * (1 + totalModifierPercent / 100)
+  const driftPercent = getRandomRewardDriftPercent();
+
+  const tagModifierGp = calculateVisibleGpModifier(
+    baseRewardGp,
+    totalTagModifierPercent
   );
 
-  const driftPercent = rollDie(REWARD_DRIFT_RANGE_PERCENT * 2 + 1) -
-    (REWARD_DRIFT_RANGE_PERCENT + 1);
+  const afterTagModifiersGp = baseRewardGp + tagModifierGp;
 
-  const finalRewardGp = Math.floor(
-    afterTagModifiers * (1 + driftPercent / 100)
+  const driftModifierGp = calculateVisibleGpModifier(
+    afterTagModifiersGp,
+    driftPercent
+  );
+
+  const finalRewardGp = Math.max(
+    1,
+    Math.floor(afterTagModifiersGp + driftModifierGp)
   );
 
   return {
     rewardText: `${finalRewardGp} GP`,
     details: {
       baseRewardGp,
-      totalModifierPercent,
+      totalTagModifierPercent,
+      tagModifierGp,
+      afterTagModifiersGp,
       driftPercent,
+      driftModifierGp,
       finalRewardGp
     }
   };
+}
+
+function calculateVisibleGpModifier(baseRewardGp, modifierPercent) {
+  if (!Number.isFinite(modifierPercent) || modifierPercent === 0) {
+    return 0;
+  }
+
+  const exactChange = baseRewardGp * (modifierPercent / 100);
+  const absoluteChange = Math.abs(exactChange);
+
+  // This keeps the modifier percentage-based for larger rewards,
+  // but prevents small rewards like 10 GP from swallowing 5% changes.
+  const visibleChange = Math.max(1, Math.floor(absoluteChange));
+
+  if (modifierPercent > 0) {
+    return visibleChange;
+  }
+
+  return -visibleChange;
+}
+
+function getRandomRewardDriftPercent() {
+  if (REWARD_DRIFT_RANGE_PERCENT <= 0) {
+    return 0;
+  }
+
+  return rollDie(REWARD_DRIFT_RANGE_PERCENT * 2 + 1) -
+    (REWARD_DRIFT_RANGE_PERCENT + 1);
 }
 
 function getRewardModifier(entry) {
