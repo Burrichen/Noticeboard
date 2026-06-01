@@ -1,4 +1,4 @@
-const { askSingleKeyNumber, pause } = require("./input");
+const { chooseFromList, pause } = require("./input");
 const { generateNoticeboard } = require("./generator");
 const { loadSettings, saveSettings } = require("./settings");
 const style = require("./style");
@@ -10,9 +10,28 @@ let kurovianFlavour = loadedSettings.kurovianFlavour;
 
 async function runApp() {
   while (true) {
-    printMainMenu();
-
-    const choice = await askSingleKeyNumber("Choose an option: ", 1, 3);
+    const choice = await chooseFromList({
+      title: "DND Noticeboard Generator",
+      statusLines: [
+        `${style.dim("Generation mode:")} ${colourMode(currentMode)}`,
+        `${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`
+      ],
+      prompt: "Choose an option",
+      items: [
+        {
+          label: "Start",
+          colour: style.colours.witchGreen
+        },
+        {
+          label: "Options",
+          colour: style.colours.ghostCyan
+        },
+        {
+          label: "Exit",
+          colour: style.colours.blood
+        }
+      ]
+    });
 
     if (choice === 1) {
       await startGenerator();
@@ -23,6 +42,7 @@ async function runApp() {
     }
 
     if (choice === 3) {
+      console.clear();
       console.log(style.dim("Goodbye."));
       return;
     }
@@ -43,22 +63,36 @@ async function startGenerator() {
 
 async function openOptions() {
   while (true) {
-    console.clear();
-
-    console.log(style.line());
-    console.log(style.title(" Options"));
-    console.log(style.line());
-    console.log(`${style.dim("Generation mode:")} ${colourMode(currentMode)}`);
-    console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`);
-    console.log("");
-    console.log(`${style.menuNumber(1)} ${style.optionName("Manual", style.colours.midnightBlue)}`);
-    console.log(`${style.menuNumber(2)} ${style.optionName("Semi-automatic", style.colours.cursedViolet)}`);
-    console.log(`${style.menuNumber(3)} ${style.optionName("Automatic", style.colours.witchGreen)}`);
-    console.log(`${style.menuNumber(4)} ${style.optionName("Toggle Kurovian Flavour", style.colours.tarnishedGold)}`);
-    console.log(`${style.menuNumber(5)} ${style.optionName("Back", style.colours.oldBone)}`);
-    console.log("");
-
-    const choice = await askSingleKeyNumber("Choose an option: ", 1, 5);
+    const choice = await chooseFromList({
+      title: "Options",
+      statusLines: [
+        `${style.dim("Generation mode:")} ${colourMode(currentMode)}`,
+        `${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`
+      ],
+      prompt: "Choose an option",
+      items: [
+        {
+          label: "Manual",
+          colour: style.colours.midnightBlue
+        },
+        {
+          label: "Semi-automatic",
+          colour: style.colours.cursedViolet
+        },
+        {
+          label: "Automatic",
+          colour: style.colours.witchGreen
+        },
+        {
+          label: "Toggle Kurovian Flavour",
+          colour: style.colours.tarnishedGold
+        },
+        {
+          label: "Back",
+          colour: style.colours.oldBone
+        }
+      ]
+    });
 
     if (choice === 5) {
       return;
@@ -81,16 +115,6 @@ async function openOptions() {
     }
 
     saveCurrentSettings();
-
-    if (choice === 4) {
-      console.log(
-        style.success(
-          `Kurovian Flavour ${kurovianFlavour ? "enabled" : "disabled"}.`
-        )
-      );
-    } else {
-      console.log(style.success(`Mode set to ${formatMode(currentMode)}.`));
-    }
   }
 }
 
@@ -101,23 +125,9 @@ function saveCurrentSettings() {
   });
 }
 
-function printMainMenu() {
+function printNoticeboardResult(result) {
   console.clear();
 
-  console.log(style.line());
-  console.log(style.title(" DND Noticeboard Generator"));
-  console.log(style.line());
-  console.log(`${style.dim("Generation mode:")} ${colourMode(currentMode)}`);
-  console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`);
-  console.log("");
-  console.log(`${style.menuNumber(1)} ${style.optionName("Start", style.colours.witchGreen)}`);
-  console.log(`${style.menuNumber(2)} ${style.optionName("Options", style.colours.ghostCyan)}`);
-  console.log(`${style.menuNumber(3)} ${style.optionName("Exit", style.colours.blood)}`);
-  console.log("");
-}
-
-function printNoticeboardResult(result) {
-  console.log("");
   console.log(style.line());
   console.log(style.title(" Generated Noticeboard"));
   console.log(style.line());

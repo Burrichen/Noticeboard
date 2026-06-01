@@ -1,9 +1,4 @@
-const {
-  ask,
-  askSingleKeyNumber,
-  askSingleKeyChoice,
-  parseWholeNumber
-} = require("./input");
+const { chooseFromList } = require("./input");
 const { QUALITY_TABLE, SIZE_TABLE } = require("./tables");
 const style = require("./style");
 const { generateLegitimateContract, validateLegitimateTables } = require("./legitimateContracts");
@@ -62,8 +57,6 @@ async function generateNoticeboard(mode, options = {}) {
 }
 
 async function chooseQuality(mode) {
-  printQualityTable();
-
   if (mode === "automatic") {
     const roll = rollDie(10);
     const result = getMasterTableResult(QUALITY_TABLE, roll);
@@ -74,7 +67,18 @@ async function chooseQuality(mode) {
     };
   }
 
-  const chosenId = await askSingleKeyNumber("Choose quality: ", 1, 5);
+  const chosenId = await chooseFromList({
+    title: "Quality",
+    prompt: "Choose quality",
+    items: QUALITY_TABLE.map((quality) => {
+      return {
+        label: quality.name,
+        description: quality.description,
+        colour: getQualityColour(quality.name)
+      };
+    })
+  });
+
   const result = QUALITY_TABLE.find((quality) => quality.id === chosenId);
 
   return {
@@ -84,8 +88,6 @@ async function chooseQuality(mode) {
 }
 
 async function chooseSize(mode) {
-  printSizeTable();
-
   if (mode === "automatic") {
     const roll = rollDie(10);
     const result = getMasterTableResult(SIZE_TABLE, roll);
@@ -96,7 +98,18 @@ async function chooseSize(mode) {
     };
   }
 
-  const chosenId = await askSingleKeyNumber("Choose size: ", 1, 5);
+  const chosenId = await chooseFromList({
+    title: "Size",
+    prompt: "Choose size",
+    items: SIZE_TABLE.map((size) => {
+      return {
+        label: size.name,
+        description: size.description,
+        colour: getSizeColour(size.id)
+      };
+    })
+  });
+
   const result = SIZE_TABLE.find((size) => size.id === chosenId);
 
   return {
@@ -119,31 +132,29 @@ async function chooseNoticeCount(size, mode) {
     };
   }
 
-  while (true) {
-    const answer = await ask(
-      `Enter notice count ${minimum}-${maximum}, or press Enter to roll: `
-    );
+  const noticeCountOptions = [];
 
-    if (answer === "") {
-      const roll = rollDice(size.contractDice);
-
-      return {
-        count: roll.total,
-        rollText: `automatic ${formulaText}`
-      };
-    }
-
-    const total = parseWholeNumber(answer);
-
-    if (total !== null && total >= minimum && total <= maximum) {
-      return {
-        count: total,
-        rollText: "manual selection"
-      };
-    }
-
-    console.log(style.error(`Invalid total. Must be between ${minimum} and ${maximum}.`));
+  for (let count = minimum; count <= maximum; count += 1) {
+    noticeCountOptions.push({
+      label: `${count}`,
+      description: `${count} notice${count === 1 ? "" : "s"}`,
+      colour: style.colours.oldBone
+    });
   }
+
+  const chosenIndex = await chooseFromList({
+    title: "Notice Count",
+    statusLines: [
+      `${style.dim("Board size:")} ${style.optionName(size.name, style.colours.tarnishedGold)}`
+    ],
+    prompt: "Choose notice count",
+    items: noticeCountOptions
+  });
+
+  return {
+    count: minimum + chosenIndex - 1,
+    rollText: "manual selection"
+  };
 }
 
 async function generateNoticeAutomatically(number, quality, size, mode, options) {
@@ -174,10 +185,7 @@ async function generateNoticeAutomatically(number, quality, size, mode, options)
 }
 
 async function generateNoticeManually(number, quality, size, mode, options) {
-  console.log("");
-  console.log(`${style.dim("---")} ${style.title(`Notice ${number}`)} ${style.dim("---")}`);
-
-  const noteChoice = await chooseNoteOrContract(size);
+  const noteChoice = await chooseNoteOrContract(number);
 
   if (noteChoice.isNote) {
     return {
@@ -187,7 +195,7 @@ async function generateNoticeManually(number, quality, size, mode, options) {
     };
   }
 
-  const contractChoice = await chooseContractType(quality);
+  const contractChoice = await chooseContractType(number);
   const legitimateContract =
     contractChoice.contractType === "Legitimate"
       ? await generateLegitimateContract(mode, options)
@@ -202,103 +210,68 @@ async function generateNoticeManually(number, quality, size, mode, options) {
   };
 }
 
-async function chooseNoteOrContract(size) {
-  const choice = await askSingleKeyChoice("Note or contract? N/C, or R to roll: ", [
-    "n",
-    "c",
-    "r"
-  ]);
-
-  if (choice === "n") {
-    return {
-      isNote: true,
-      rollText: "manual selection"
-    };
-  }
-
-  if (choice === "c") {
-    return {
-      isNote: false,
-      rollText: "manual selection"
-    };
-  }
-
-  const roll = rollDie(100);
+async function chooseNoteOrContract(number) {
+  const choice = await chooseFromList({
+    title: `Notice ${number}`,
+    prompt: "Choose notice type",
+    items: [
+      {
+        label: "World-building Note",
+        description: "A piece of lore, rumour, news, warning, or city flavour.",
+        colour: style.colours.cursedViolet
+      },
+      {
+        label: "Contract",
+        description: "A job or request that can lead to an adventure.",
+        colour: style.colours.oldBone
+      }
+    ]
+  });
 
   return {
-    isNote: roll <= size.noteChancePercent,
-    rollText: `automatic d100 = ${roll}`
+    isNote: choice === 1,
+    rollText: "manual selection"
   };
 }
 
-async function chooseContractType(quality) {
-  console.log("");
-  console.log(`${style.menuNumber(1)} ${style.illegal("Illegal")}`);
-  console.log(`${style.menuNumber(2)} ${style.illegitimate("Illegitimate")}`);
-  console.log(`${style.menuNumber(3)} ${style.legitimate("Legitimate")}`);
-  console.log(`${style.menuNumber(4)} ${style.optionName("Roll", style.colours.tarnishedGold)}`);
+async function chooseContractType(number) {
+  const choice = await chooseFromList({
+    title: `Notice ${number} Contract Type`,
+    prompt: "Choose contract type",
+    items: [
+      {
+        label: "Illegal",
+        colour: style.colours.blood
+      },
+      {
+        label: "Illegitimate",
+        colour: style.colours.rust
+      },
+      {
+        label: "Legitimate",
+        colour: style.colours.corpseGreen
+      }
+    ]
+  });
 
-  const answer = await askSingleKeyNumber("Choose contract type: ", 1, 4);
-
-  if (answer === 1) {
+  if (choice === 1) {
     return {
       contractType: "Illegal",
       rollText: "manual selection"
     };
   }
 
-  if (answer === 2) {
+  if (choice === 2) {
     return {
       contractType: "Illegitimate",
       rollText: "manual selection"
     };
   }
 
-  if (answer === 3) {
-    return {
-      contractType: "Legitimate",
-      rollText: "manual selection"
-    };
-  }
-
-  const roll = rollDie(100);
-
   return {
-    contractType: rollOnPercentTable(quality.contractTypeTable, roll),
-    rollText: `automatic d100 = ${roll}`
+    contractType: "Legitimate",
+    rollText: "manual selection"
   };
-}
-
-function printQualityTable() {
-  console.log(style.line());
-  console.log(style.title(" Quality"));
-  console.log(style.line());
-  console.log("");
-
-  for (const quality of QUALITY_TABLE) {
-    const colour = getQualityColour(quality.name);
-
-    console.log(`${style.menuNumber(quality.id)} ${style.optionName(quality.name, colour)}`);
-    console.log(`   ${style.subtitle(quality.description)}`);
-  }
-
-  console.log("");
-}
-
-function printSizeTable() {
-  console.log(style.line());
-  console.log(style.title(" Size"));
-  console.log(style.line());
-  console.log("");
-
-  for (const size of SIZE_TABLE) {
-    const colour = getSizeColour(size.id);
-
-    console.log(`${style.menuNumber(size.id)} ${style.optionName(size.name, colour)}`);
-    console.log(`   ${style.subtitle(size.description)}`);
-  }
-
-  console.log("");
 }
 
 function getQualityColour(name) {

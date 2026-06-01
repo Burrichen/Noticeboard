@@ -2,10 +2,14 @@ const readline = require("readline/promises");
 const { stdin: input, stdout: output } = require("process");
 const style = require("./style");
 
-const rl = readline.createInterface({ input, output });
-
 async function ask(question) {
-  return (await rl.question(style.prompt(question))).trim();
+  disableRawMode();
+
+  const rl = readline.createInterface({ input, output });
+  const answer = await rl.question(style.prompt(question));
+  rl.close();
+
+  return answer.trim();
 }
 
 async function askNumber(question, minimum, maximum) {
@@ -21,69 +25,175 @@ async function askNumber(question, minimum, maximum) {
   }
 }
 
-async function askSingleKeyNumber(question, minimum, maximum) {
+async function chooseFromList(config) {
+  const title = config.title ?? "Choose";
+  const statusLines = config.statusLines ?? [];
+  const prompt = config.prompt ?? "Choose an option";
+  const items = config.items;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error("chooseFromList requires at least one item.");
+  }
+
+  let selectedIndex = 0;
+  let typedNumber = "";
+  let errorMessage = "";
+
   while (true) {
-    output.write(style.prompt(question));
+    renderChoiceList({
+      title,
+      statusLines,
+      prompt,
+      items,
+      selectedIndex,
+      typedNumber,
+      errorMessage
+    });
 
-    const key = await readSingleKey();
+    const rawKey = await readKey();
+    const key = normaliseKey(rawKey);
 
-    output.write("\n");
+    errorMessage = "";
 
-    if (key === "\u0003") {
+    if (key.name === "ctrlC") {
       closeInput();
       process.exit(0);
     }
 
-    const value = parseWholeNumber(key);
-
-    if (value !== null && value >= minimum && value <= maximum) {
-      return value;
+    if (key.name === "up") {
+      typedNumber = "";
+      selectedIndex =
+        selectedIndex === 0 ? items.length - 1 : selectedIndex - 1;
+      continue;
     }
 
-    console.log(style.error(`Choose ${minimum}-${maximum}.`));
+    if (key.name === "down") {
+      typedNumber = "";
+      selectedIndex =
+        selectedIndex === items.length - 1 ? 0 : selectedIndex + 1;
+      continue;
+    }
+
+    if (key.name === "enter") {
+      if (typedNumber !== "") {
+        const chosenNumber = parseWholeNumber(typedNumber);
+
+        if (
+          chosenNumber !== null &&
+          chosenNumber >= 1 &&
+          chosenNumber <= items.length
+        ) {
+          return chosenNumber;
+        }
+
+        errorMessage = `Choose a number between 1 and ${items.length}.`;
+        typedNumber = "";
+        continue;
+      }
+
+      return selectedIndex + 1;
+    }
+
+    if (key.name === "backspace") {
+      typedNumber = typedNumber.slice(0, -1);
+      continue;
+    }
+
+    if (key.name === "digit") {
+      if (items.length <= 9) {
+        const chosenNumber = Number.parseInt(key.value, 10);
+
+        if (chosenNumber >= 1 && chosenNumber <= items.length) {
+          return chosenNumber;
+        }
+
+        errorMessage = `Choose a number between 1 and ${items.length}.`;
+        continue;
+      }
+
+      typedNumber += key.value;
+
+      const typedValue = parseWholeNumber(typedNumber);
+
+      if (
+        typedValue !== null &&
+        typedValue >= 1 &&
+        typedValue <= items.length
+      ) {
+        selectedIndex = typedValue - 1;
+      }
+
+      continue;
+    }
   }
 }
 
-async function askSingleKeyChoice(question, allowedKeys) {
-  const normalisedKeys = allowedKeys.map((key) => key.toLowerCase());
+function renderChoiceList(config) {
+  console.clear();
 
-  while (true) {
-    output.write(style.prompt(question));
+  console.log(style.line());
+  console.log(style.title(` ${config.title}`));
+  console.log(style.line());
 
-    const key = await readSingleKey();
-
-    output.write("\n");
-
-    if (key === "\u0003") {
-      closeInput();
-      process.exit(0);
+  if (config.statusLines.length > 0) {
+    for (const line of config.statusLines) {
+      console.log(line);
     }
 
-    const normalisedKey = key.toLowerCase();
+    console.log("");
+  } else {
+    console.log("");
+  }
 
-    if (normalisedKeys.includes(normalisedKey)) {
-      return normalisedKey;
+  for (let index = 0; index < config.items.length; index += 1) {
+    const item = config.items[index];
+    const isSelected = index === config.selectedIndex && config.typedNumber === "";
+
+    const arrow = isSelected ? style.cursor("➤") : " ";
+    const number = style.menuNumber(index + 1);
+    const colour = item.colour ?? style.colours.oldBone;
+
+    const label = isSelected
+      ? style.selectedOptionName(item.label, colour)
+      : style.optionName(item.label, colour);
+
+    console.log(`${arrow} ${number} ${label}`);
+
+    if (item.description !== undefined && item.description !== "") {
+      const description = isSelected
+        ? style.selectedSubtitle(`   ${item.description}`)
+        : `   ${style.subtitle(item.description)}`;
+
+      console.log(`  ${description}`);
     }
+  }
 
-    console.log(style.error(`Choose one of: ${allowedKeys.join(", ")}`));
+  console.log("");
+
+  const instruction =
+    config.items.length <= 9
+      ? "press a number, or use ↑/↓ then Enter"
+      : "type a number then Enter, or use ↑/↓ then Enter";
+
+  console.log(style.prompt(`${config.prompt} `) + style.dim(`(${instruction})`));
+
+  if (config.typedNumber !== "") {
+    console.log(`${style.dim("Typed:")} ${style.optionName(config.typedNumber, style.colours.tarnishedGold)}`);
+  }
+
+  if (config.errorMessage !== "") {
+    console.log(style.error(config.errorMessage));
   }
 }
 
-function readSingleKey() {
+function readKey() {
   return new Promise((resolve) => {
-    const wasRaw = input.isRaw;
+    disableRawMode();
 
     function cleanup() {
       input.off("data", onData);
-
-      if (input.isTTY) {
-        input.setRawMode(Boolean(wasRaw));
-      }
-
-      // Important:
-      // Do NOT call input.pause() here.
-      // Pausing stdin after a single-key menu can make the next normal
-      // readline prompt fail or let Node exit early.
+      disableRawMode();
+      input.pause();
     }
 
     function onData(buffer) {
@@ -100,12 +210,53 @@ function readSingleKey() {
   });
 }
 
+function normaliseKey(rawKey) {
+  if (rawKey === "\u0003") {
+    return { name: "ctrlC" };
+  }
+
+  if (rawKey === "\r" || rawKey === "\n") {
+    return { name: "enter" };
+  }
+
+  if (rawKey === "\u001b[A") {
+    return { name: "up" };
+  }
+
+  if (rawKey === "\u001b[B") {
+    return { name: "down" };
+  }
+
+  if (rawKey === "\u007f" || rawKey === "\b") {
+    return { name: "backspace" };
+  }
+
+  if (/^\d$/.test(rawKey)) {
+    return {
+      name: "digit",
+      value: rawKey
+    };
+  }
+
+  return {
+    name: "other",
+    value: rawKey
+  };
+}
+
 async function pause() {
   await ask("\nPress Enter to continue...");
 }
 
 function closeInput() {
-  rl.close();
+  disableRawMode();
+  input.pause();
+}
+
+function disableRawMode() {
+  if (input.isTTY) {
+    input.setRawMode(false);
+  }
 }
 
 function parseWholeNumber(value) {
@@ -141,8 +292,7 @@ function parseDiceInput(value, sides) {
 module.exports = {
   ask,
   askNumber,
-  askSingleKeyNumber,
-  askSingleKeyChoice,
+  chooseFromList,
   pause,
   closeInput,
   parseWholeNumber,

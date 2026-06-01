@@ -1,4 +1,4 @@
-const { askSingleKeyNumber } = require("./input");
+const { chooseFromList } = require("./input");
 const { rollDie } = require("./dice");
 const style = require("./style");
 
@@ -318,20 +318,18 @@ function validateLegitimateTables() {
 }
 
 async function chooseLegitimateSeed() {
-  console.log("");
-  console.log(style.line());
-  console.log(style.title(" Legitimate Contract Seed"));
-  console.log(style.line());
-  console.log("");
+  const chosenId = await chooseFromList({
+    title: "Legitimate Contract Seed",
+    prompt: "Choose seed",
+    items: LEGITIMATE_SEEDS.map((seed) => {
+      return {
+        label: seed.name,
+        description: seed.formulaText,
+        colour: style.colours.oldBone
+      };
+    })
+  });
 
-  for (const seed of LEGITIMATE_SEEDS) {
-    console.log(`${style.menuNumber(seed.id)} ${style.optionName(seed.name, style.colours.oldBone)}`);
-    console.log(`   ${style.subtitle(seed.formulaText)}`);
-  }
-
-  console.log("");
-
-  const chosenId = await askSingleKeyNumber("Choose seed: ", 1, LEGITIMATE_SEEDS.length);
   const result = LEGITIMATE_SEEDS.find((seed) => seed.id === chosenId);
 
   if (result === undefined) {
@@ -358,27 +356,26 @@ function rollLegitimateSeed() {
   throw new Error(`No legitimate seed found for d100 roll ${roll}.`);
 }
 
-async function chooseTagManually(tagKey) {
-  const table = TAG_TABLES[tagKey];
+async function chooseTagManually(tagKey, kurovianFlavour) {
+  const availableEntries = getAvailableTagEntries(tagKey, kurovianFlavour);
 
-  console.log("");
-  console.log(style.line());
-  console.log(style.title(` ${TAG_LABELS[tagKey]}`));
-  console.log(style.line());
-  console.log("");
+  const chosenIndex = await chooseFromList({
+    title: TAG_LABELS[tagKey],
+    statusLines: kurovianFlavour
+      ? [
+          style.subtitle("Kurovian Flavour enabled: Kurovian-only options are available.")
+        ]
+      : [],
+    prompt: "Choose tag",
+    items: availableEntries.map((entry, index) => {
+      return {
+        label: getTagMenuText(tagKey, entry, index),
+        colour: getTagColour(tagKey, entry)
+      };
+    })
+  });
 
-  for (let index = 0; index < table.length; index += 1) {
-    const entry = table[index];
-    const displayText = getTagMenuText(tagKey, entry, index);
-
-    console.log(`${style.menuNumber(index + 1)} ${style.optionName(displayText, getTagColour(tagKey))}`);
-  }
-
-  console.log("");
-
-  const chosenIndex = await askSingleKeyNumber("Choose tag: ", 1, table.length);
-
-  return table[chosenIndex - 1];
+  return availableEntries[chosenIndex - 1];
 }
 
 function chooseTagAutomatically(tagKey) {
@@ -652,7 +649,11 @@ function sentenceCase(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function getTagColour(tagKey) {
+function getTagColour(tagKey, entry) {
+  if (isKurovianEntry(entry)) {
+    return style.colours.cursedViolet;
+  }
+
   if (tagKey === "employer") {
     return style.colours.tarnishedGold;
   }
