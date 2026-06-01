@@ -4,7 +4,8 @@ const path = require("path");
 const SETTINGS_PATH = path.join(process.cwd(), "settings.json");
 
 const DEFAULT_SETTINGS = {
-  mode: "manual"
+  mode: "manual",
+  kurovianFlavour: false
 };
 
 function loadSettings() {
@@ -17,7 +18,11 @@ function loadSettings() {
     const parsed = JSON.parse(raw);
 
     return {
-      mode: isValidMode(parsed.mode) ? parsed.mode : DEFAULT_SETTINGS.mode
+      mode: isValidMode(parsed.mode) ? parsed.mode : DEFAULT_SETTINGS.mode,
+      kurovianFlavour:
+        typeof parsed.kurovianFlavour === "boolean"
+          ? parsed.kurovianFlavour
+          : DEFAULT_SETTINGS.kurovianFlavour
     };
   } catch {
     return { ...DEFAULT_SETTINGS };
@@ -26,7 +31,11 @@ function loadSettings() {
 
 function saveSettings(settings) {
   const safeSettings = {
-    mode: isValidMode(settings.mode) ? settings.mode : DEFAULT_SETTINGS.mode
+    mode: isValidMode(settings.mode) ? settings.mode : DEFAULT_SETTINGS.mode,
+    kurovianFlavour:
+      typeof settings.kurovianFlavour === "boolean"
+        ? settings.kurovianFlavour
+        : DEFAULT_SETTINGS.kurovianFlavour
   };
 
   fs.writeFileSync(SETTINGS_PATH, JSON.stringify(safeSettings, null, 2));
