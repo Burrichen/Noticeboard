@@ -185,9 +185,9 @@ const weirdContract = [
 
   { text: "investigate and end a curse affecting a person, family, or place", baseRewardGp: 300 },
 
-  { text: "", baseRewardGp: 0 },
+  { text: "break a supernatural bargain", baseRewardGp: 250 },
 
-  { text: "", baseRewardGp: 0 },
+  { text: "return something that does not belong in the mortal realm", baseRewardGp: 0 },
 
   { text: "", baseRewardGp: 0 }
 ];
@@ -224,7 +224,11 @@ const investigationContract = [
   { text: "", baseRewardGp: 0 },
 
   // TODO: Fill in investigation contract option 5.
-  { text: "", baseRewardGp: 0 }
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in Kurovian-only investigation contract option.
+  // This option is only visible/rollable when Kurovian Flavour is enabled.
+  { text: "KurovianOnly", baseRewardGp: 67, kurovian: true }
 ];
 
 const weirdPayment = [
@@ -241,7 +245,11 @@ const weirdPayment = [
   { text: "", rewardText: "" },
 
   // TODO: Fill in weird payment option 5.
-  { text: "", rewardText: "" }
+  { text: "", rewardText: "" },
+
+  // TODO: Fill in Kurovian-only weird payment option.
+  // This option is only visible/rollable when Kurovian Flavour is enabled.
+  { text: "KurovianOnly", rewardText: "Your test passes", kurovian: true }
 ];
 
 const TAG_TABLES = {

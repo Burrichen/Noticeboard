@@ -3,7 +3,10 @@ const { generateNoticeboard } = require("./generator");
 const { loadSettings, saveSettings } = require("./settings");
 const style = require("./style");
 
-let currentMode = loadSettings().mode;
+const loadedSettings = loadSettings();
+
+let currentMode = loadedSettings.mode;
+let kurovianFlavour = loadedSettings.kurovianFlavour;
 
 async function runApp() {
   while (true) {
@@ -29,7 +32,9 @@ async function runApp() {
 async function startGenerator() {
   console.clear();
 
-  const result = await generateNoticeboard(currentMode);
+  const result = await generateNoticeboard(currentMode, {
+    kurovianFlavour
+  });
 
   printNoticeboardResult(result);
 
@@ -43,17 +48,19 @@ async function openOptions() {
     console.log(style.line());
     console.log(style.title(" Options"));
     console.log(style.line());
-    console.log(`${style.dim("Current mode:")} ${colourMode(currentMode)}`);
+    console.log(`${style.dim("Generation mode:")} ${colourMode(currentMode)}`);
+    console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`);
     console.log("");
     console.log(`${style.menuNumber(1)} ${style.optionName("Manual", style.colours.midnightBlue)}`);
     console.log(`${style.menuNumber(2)} ${style.optionName("Semi-automatic", style.colours.cursedViolet)}`);
     console.log(`${style.menuNumber(3)} ${style.optionName("Automatic", style.colours.witchGreen)}`);
-    console.log(`${style.menuNumber(4)} ${style.optionName("Back", style.colours.oldBone)}`);
+    console.log(`${style.menuNumber(4)} ${style.optionName("Toggle Kurovian Flavour", style.colours.tarnishedGold)}`);
+    console.log(`${style.menuNumber(5)} ${style.optionName("Back", style.colours.oldBone)}`);
     console.log("");
 
-    const choice = await askSingleKeyNumber("Choose an option: ", 1, 4);
+    const choice = await askSingleKeyNumber("Choose an option: ", 1, 5);
 
-    if (choice === 4) {
+    if (choice === 5) {
       return;
     }
 
@@ -69,10 +76,29 @@ async function openOptions() {
       currentMode = "automatic";
     }
 
-    saveSettings({ mode: currentMode });
+    if (choice === 4) {
+      kurovianFlavour = !kurovianFlavour;
+    }
 
-    console.log(style.success(`Mode set to ${formatMode(currentMode)}.`));
+    saveCurrentSettings();
+
+    if (choice === 4) {
+      console.log(
+        style.success(
+          `Kurovian Flavour ${kurovianFlavour ? "enabled" : "disabled"}.`
+        )
+      );
+    } else {
+      console.log(style.success(`Mode set to ${formatMode(currentMode)}.`));
+    }
   }
+}
+
+function saveCurrentSettings() {
+  saveSettings({
+    mode: currentMode,
+    kurovianFlavour
+  });
 }
 
 function printMainMenu() {
@@ -81,7 +107,8 @@ function printMainMenu() {
   console.log(style.line());
   console.log(style.title(" DND Noticeboard Generator"));
   console.log(style.line());
-  console.log(`${style.dim("Current mode:")} ${colourMode(currentMode)}`);
+  console.log(`${style.dim("Generation mode:")} ${colourMode(currentMode)}`);
+  console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`);
   console.log("");
   console.log(`${style.menuNumber(1)} ${style.optionName("Start", style.colours.witchGreen)}`);
   console.log(`${style.menuNumber(2)} ${style.optionName("Options", style.colours.ghostCyan)}`);
@@ -95,6 +122,7 @@ function printNoticeboardResult(result) {
   console.log(style.title(" Generated Noticeboard"));
   console.log(style.line());
   console.log(`${style.dim("Mode:")} ${colourMode(result.mode)}`);
+  console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(result.kurovianFlavour)}`);
   console.log(`${style.dim("Quality:")} ${style.optionName(result.quality.name, style.colours.oldBone)}`);
   console.log(`${style.dim("Size:")} ${style.optionName(result.size.name, style.colours.tarnishedGold)}`);
   console.log(`${style.dim("Notice count:")} ${style.optionName(String(result.noticeCount), style.colours.oldBone)}`);
@@ -129,6 +157,14 @@ function colourMode(mode) {
   }
 
   return style.optionName("Automatic", style.colours.witchGreen);
+}
+
+function colourKurovianFlavour(enabled) {
+  if (enabled) {
+    return style.optionName("Enabled", style.colours.cursedViolet);
+  }
+
+  return style.optionName("Disabled", style.colours.graveAsh);
 }
 
 function formatMode(mode) {
