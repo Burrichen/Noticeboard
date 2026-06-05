@@ -90,12 +90,6 @@ const LEGITIMATE_SEEDS = [
 //   text: "your tag text here"
 //   rewardModifierPercent: -15
 //
-// Kurovian-only entries should use:
-//   kurovian: true
-//
-// These entries are hidden and cannot be rolled unless the
-// "Kurovian Flavour" setting is enabled.
-//
 // weirdPayment ignores normal GP reward calculation and overwrites the payment.
 // Use:
 //   text: "payment description here"
@@ -105,111 +99,117 @@ const LEGITIMATE_SEEDS = [
 // they will be ignored unless the whole table is blank.
 
 const contract = [
-  { text: "work a job", baseRewardGp: 10 },
+    // TODO: Contract Area
+  { text: "work a job", baseRewardGp: 10, weight: 30 },
+  { text: "escort an individual", baseRewardGp: 25, weight: 20 },
+  { text: "deliver a sealed letter", baseRewardGp: 20, weight: 20 },
+  { text: "deliver an object of importance", baseRewardGp: 50, weight: 10 },
+  { text: "guard a location overnight", baseRewardGp: 20, weight: 10 },
+  { text: "escort a caravan", baseRewardGp: 40, weight: 10 },
+  { text: "carry supplies to an isolated house, farm or outpost", baseRewardGp: 20, weight: 5 },
+  { text: "find a missing animal", baseRewardGp: 5, weight: 5 },
+  { text: "retrieve a wagon, cart or boat stranded off-route", baseRewardGp: 30, weight: 5 },
+  { text: "escort a disliked official, collector or guild agent through town", baseRewardGp: 50, weight: 1 },
 
-  // TODO: Fill in contract option 2.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in contract option 3.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in contract option 5.
-  { text: "", baseRewardGp: 0 }
 ];
 
 const employer = [
-  // weight: 30 = common
-  { text: "Local Merchant", rewardModifierPercent: 5, weight: 30 },
-
-  // weight: 20 = fairly common
+      // TODO: Employer Area
+    // weight: 20 = fairly common
+  { text: "Local Merchant", rewardModifierPercent: 5, weight: 20 },
   { text: "Farmer", rewardModifierPercent: -5, weight: 20 },
-
+  { text: "Local Resident", rewardModifierPercent: -10, weight: 20 },
   // weight: 10 = normal
   { text: "Town Guard", rewardModifierPercent: 0, weight: 10 },
-
-  // weight: 10 = normal
   { text: "Shopkeeper", rewardModifierPercent: 5, weight: 10 },
-
-  // weight: 10 = normal
   { text: "Innkeeper", rewardModifierPercent: 0, weight: 10 },
-
   // weight: 5 = uncommon
   { text: "Retired Adventurer", rewardModifierPercent: 0, weight: 5 },
-
+  { text: "Guild Representative", rewardModifierPercent: 10, weight: 5 },
+  { text: "Village Elder", rewardModifierPercent: -10, weight: 5 },
+  { text: "Council Member", rewardModifierPercent: 5, weight: 5 },
+  { text: "Priest", rewardModifierPercent: -10, weight: 5 },
+  { text: "Caravan Master", rewardModifierPercent: 5, weight: 5 },
+  { text: "Nobel's Steward", rewardModifierPercent: 5, weight: 5 },
+  { text: "Artisan", rewardModifierPercent: 15, weight: 5 },
+  { text: "Dockworker, ferryman or stablemaster", rewardModifierPercent: 0, weight: 5 },
+  { text: "Scholar", rewardModifierPercent: -5, weight: 5 },
+  { text: "Courier", rewardModifierPercent: 0, weight: 5 },
+  { text: "Scribe", rewardModifierPercent: 5, weight: 5 },
+  { text: "Criminal Contact", rewardModifierPercent: 0, weight: 5 },
+  { text: "Healer", rewardModifierPercent: -5, weight: 5 },
   // weight: 1 = rare
+  { text: "Nobel", rewardModifierPercent: 75, weight: 1 },
+  { text: "Anonymous Patron", rewardModifierPercent: 25, weight: 1 },
+  { text: "Cursed Individual", rewardModifierPercent: 25, weight: 1 },
   { text: "Cult Member", rewardModifierPercent: 10, weight: 1 }
 ];
 
 const externalComplication = [
-  // TODO: Fill in external complication option 1.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 2.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 3.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 4.
-  { text: "", rewardModifierPercent: 0 },
-
-  // TODO: Fill in external complication option 5.
-  { text: "", rewardModifierPercent: 0 }
+  // TODO: External Complication Area
+  { text: "the job must be completed in a limited timeframe", baseRewardGp: 25 },
+  { text: "the employer has no information about the contract", rewardModifierPercent: 10 },
+  { text: "the employer has unwittingly given false information", rewardModifierPercent: 0 },
+  { text: "another group has already accepted the contract", rewardModifierPercent: -10 },
+  { text: "an alternative group has an active interest in the contract not being fulfilled", rewardModifierPercent: 0 },
+  { text: "another group has already accepted the contract", rewardModifierPercent: 0 },
+  { text: "the job attracts unwanted public attention", rewardModifierPercent: 10 },
+  { text: "the contract requires following a local custom", rewardModifierPercent: 5 },
+  { text: "the employer has a strange reputation", rewardModifierPercent: 5 },
+  { text: "the job is merely one part of a much larger ", rewardModifierPercent: 0 }
 ];
 
 const dangerousContract = [
-  // TODO: Fill in dangerous contract option 1.
-  { text: "", baseRewardGp: 0 },
+  // TODO: Dangerous Contract Area
+  { text: "hunt a monster that's been attacking travellers", rewardModifierPercent: 100 },
+  { text: "drive off a beast that's been threatening livestock", baseRewardGp: 100 },
+  { text: "clear creatures out of an abandoned building", baseRewardGp: 100 },
+  { text: "exorcise a ghost from a home, graveyard, shrine or inn", baseRewardGp: 200 },
+  { text: "rescue someone trapped in a dangerous location", baseRewardGp: 200 },
+  { text: "destroy a brood den", baseRewardGp: 125 },
+  { text: "protect a caravan, farm or outpost from incoming attack", baseRewardGp: 150 },
+  { text: "capture a dangerous outlaw alive", baseRewardGp: 125 }, 
+  { text: "kill a dangerous outlaw", baseRewardGp: 75 }, 
+  { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125 }, 
+  { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150 }, 
+  { text: "guard a ritual. burial or ceremony from hostile forces", baseRewardGp: 125 }, 
+  { text: "break into a dangerous location to recover captives or proof", baseRewardGp: 300 },
+  { text: "destroy a cursed object, relic or shrine", baseRewardGp: 150 }, 
 
-  // TODO: Fill in dangerous contract option 2.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in dangerous contract option 3.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in dangerous contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in dangerous contract option 5.
-  { text: "", baseRewardGp: 0 }
+  { text: "survive a night in a cursed or haunted location", baseRewardGp: 300 }
 ];
 
 const weirdContract = [
-  // TODO: Fill in weird contract option 1.
-  { text: "", baseRewardGp: 0 },
+  // TODO: Weird Contract Area
+  { text: "give a ghost one last day of fun", baseRewardGp: 250, weight: 1 },
 
-  // TODO: Fill in weird contract option 2.
-  { text: "", baseRewardGp: 0 },
+  { text: "investigate and end a curse affecting a person, family, or place", baseRewardGp: 300 },
 
-  // TODO: Fill in weird contract option 3.
-  { text: "", baseRewardGp: 0 },
+  { text: "break a supernatural bargain", baseRewardGp: 250 },
 
-  // TODO: Fill in weird contract option 4.
-  { text: "", baseRewardGp: 0 },
+  { text: "return something that does not belong in the mortal realm", baseRewardGp: 0 },
 
-  // TODO: Fill in weird contract option 5.
   { text: "", baseRewardGp: 0 }
 ];
 
 const socialContract = [
-  // TODO: Fill in social contract option 1.
-  { text: "", baseRewardGp: 0 },
+  // TODO: Social Contract Area
+  { text: "mediate a dispute between two families", baseRewardGp: 100, weight: 5 },
+  { text: "deliver an apology on someone else's behalf", baseRewardGp: 25, weight: 5 },
+  { text: "collect a debt without causing", baseRewardGp: 25, weight: 5 },
+  { text: "flatter a foreign dignitary", baseRewardGp: 75, weight: 5 },
 
-  // TODO: Fill in social contract option 2.
-  { text: "", baseRewardGp: 0 },
+  { text: "negotiate a truce between a guild and its workers", baseRewardGp: 125, weight: 3 },
+  { text: "act as a guild representative on a sensitive matter", baseRewardGp: 125, weight: 3 },
 
-  // TODO: Fill in social contract option 3.
-  { text: "", baseRewardGp: 0 },
+  { text: "deliver a confession on someone else's behalf", baseRewardGp: 30, weight: 2 },
+  { text: "serve as a neutral witness for a contract", baseRewardGp: 10, weight: 2 },
+  { text: "serve as a neutral witness for a wedding", baseRewardGp: 10, weight: 2 },
+  { text: "chaperone a troublesome rich kid for the day", baseRewardGp: 150, weight: 2 },
 
-  // TODO: Fill in social contract option 4.
-  { text: "", baseRewardGp: 0 },
-
-  // TODO: Fill in social contract option 5.
-  { text: "", baseRewardGp: 0 }
+  { text: "chaperone a troublesome noble guest for the day", baseRewardGp: 200, weight: 1 }
 ];
+
 
 const investigationContract = [
   // TODO: Fill in investigation contract option 1.
@@ -229,7 +229,7 @@ const investigationContract = [
 
   // TODO: Fill in Kurovian-only investigation contract option.
   // This option is only visible/rollable when Kurovian Flavour is enabled.
-  { text: "", baseRewardGp: 0, kurovian: true }
+  { text: "KurovianOnly", baseRewardGp: 67, kurovian: true }
 ];
 
 const weirdPayment = [
@@ -250,7 +250,7 @@ const weirdPayment = [
 
   // TODO: Fill in Kurovian-only weird payment option.
   // This option is only visible/rollable when Kurovian Flavour is enabled.
-  { text: "", rewardText: "", kurovian: true }
+  { text: "KurovianOnly", rewardText: "Your test passes", kurovian: true }
 ];
 
 const TAG_TABLES = {
