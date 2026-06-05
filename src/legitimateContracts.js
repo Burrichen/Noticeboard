@@ -1,131 +1,716 @@
-import { common, CustomWorld } from "@fxd-qa/bolt";
-import { generateTypingCommands } from "@fxd-qa/keyboard-navigator";
-import { setTimeout as sleep } from "node:timers/promises";
+const { chooseFromList } = require("./input");
+const { rollDie } = require("./dice");
+const style = require("./style");
 
-const log = common.LoggerFactory.getSubLogger({ name: "RokuSearchKeyboard" });
+// Your example says the final reward gets a random drift between -10 and +10.
+// Change this to 25 later if you decide you meant a full 25% drift range.
+//
+// For testing reward maths clearly, temporarily set this to 0.
+const REWARD_DRIFT_RANGE_PERCENT = 10;
 
-/**
- * ABC123 search keyboard character grid.
- *
- * Visible Roku layout:
- *
- *   [shift]   a b c d e f g   1 2 3
- *   [space]   h i j k l m n   4 5 6
- *   [delete]  o p q r s t u   7 8 9
- *   [arrows]  v w x y z - _   @ . 0
- *
- * The generateTypingCommands grid should stay as the character grid only.
- * The left control rail is handled only during the initial sync.
- */
-export const ROKU_ABC123_GRID = [
-  ["a", "b", "c", "d", "e", "f", "g", "1", "2", "3"],
-  ["h", "i", "j", "k", "l", "m", "n", "4", "5", "6"],
-  ["o", "p", "q", "r", "s", "t", "u", "7", "8", "9"],
-  ["v", "w", "x", "y", "z", "-", "_", "@", ".", "0"],
+// TODO: Edit these seed chances later.
+// These are rough placeholder values and must total 100.
+const LEGITIMATE_SEEDS = [
+  {
+    id: 1,
+    name: "Legitimate Simple",
+    percent: 30,
+    formulaText: "contract + employer = reward",
+    tagKeys: ["contract", "employer"]
+  },
+  {
+    id: 2,
+    name: "Legitimate Complicated",
+    percent: 15,
+    formulaText: "contract + employer + externalComplication = reward",
+    tagKeys: ["contract", "employer", "externalComplication"]
+  },
+  {
+    id: 3,
+    name: "Legitimate Dangerous",
+    percent: 15,
+    formulaText: "dangerousContract + employer = reward",
+    tagKeys: ["dangerousContract", "employer"]
+  },
+  {
+    id: 4,
+    name: "Legitimate Weird",
+    percent: 10,
+    formulaText: "weirdContract + employer = reward",
+    tagKeys: ["weirdContract", "employer"]
+  },
+  {
+    id: 5,
+    name: "Legitimate Social",
+    percent: 10,
+    formulaText: "socialContract + employer = reward",
+    tagKeys: ["socialContract", "employer"]
+  },
+  {
+    id: 6,
+    name: "Legitimate Investigation",
+    percent: 15,
+    formulaText: "investigationContract + employer = reward",
+    tagKeys: ["investigationContract", "employer"]
+  },
+  {
+    id: 7,
+    name: "Legitimate Weird Payment",
+    percent: 5,
+    formulaText: "dangerousContract + weirdPayment",
+    tagKeys: ["dangerousContract", "weirdPayment"],
+    rewardOverrideTag: "weirdPayment"
+  }
 ];
 
-const BUTTON_PRESS_DELAY_MS = 1000;
+// -----------------------------------------------------------------------------
+// TAG TABLES
+// -----------------------------------------------------------------------------
+//
+// Fill these in manually.
+//
+// Any tag with "contract" in its name should use:
+//   text: "your contract text here"
+//   baseRewardGp: 300
+//
+// Employer uses weighted entries:
+//   text: "your employer text here"
+//   rewardModifierPercent: -15
+//   weight: 10
+//
+// Higher weight means more common.
+// Weight does not need to add to 100.
+// Example:
+//   weight: 30  very common
+//   weight: 10  normal
+//   weight: 3   uncommon
+//   weight: 1   rare
+//
+// Other normal tags should use:
+//   text: "your tag text here"
+//   rewardModifierPercent: -15
+//
+// Kurovian-only entries should use:
+//   kurovian: true
+//
+// These entries are hidden and cannot be rolled unless the
+// "Kurovian Flavour" setting is enabled.
+//
+// weirdPayment ignores normal GP reward calculation and overwrites the payment.
+// Use:
+//   text: "payment description here"
+//   rewardText: "payment shown to the player here"
+//
+// Automatic rolling will prefer filled entries. If some entries are still blank,
+// they will be ignored unless the whole table is blank.
 
-/**
- * The Roku keyboard opens on the left control rail, one column before "a".
- * So to reach character column 0, we still need one right press.
- */
-const ROKU_LEFT_CONTROL_RAIL_OFFSET = 1;
+const contract = [
+  { text: "work a job", baseRewardGp: 10 },
 
-export function getRokuAbc123KeyCoords(character: string): {
-  row: number;
-  col: number;
-} {
-  const normalizedCharacter = character.toLowerCase();
+  // TODO: Fill in contract option 2.
+  { text: "", baseRewardGp: 0 },
 
-  for (let row = 0; row < ROKU_ABC123_GRID.length; row += 1) {
-    const col = ROKU_ABC123_GRID[row].indexOf(normalizedCharacter);
+  // TODO: Fill in contract option 3.
+  { text: "", baseRewardGp: 0 },
 
-    if (col >= 0) {
-      return { row, col };
+  // TODO: Fill in contract option 4.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in contract option 5.
+  { text: "", baseRewardGp: 0 }
+];
+
+const employer = [
+  // weight: 30 = common
+  { text: "Local Merchant", rewardModifierPercent: 5, weight: 30 },
+
+  // weight: 20 = fairly common
+  { text: "Farmer", rewardModifierPercent: -5, weight: 20 },
+
+  // weight: 10 = normal
+  { text: "Town Guard", rewardModifierPercent: 0, weight: 10 },
+
+  // weight: 10 = normal
+  { text: "Shopkeeper", rewardModifierPercent: 5, weight: 10 },
+
+  // weight: 10 = normal
+  { text: "Innkeeper", rewardModifierPercent: 0, weight: 10 },
+
+  // weight: 5 = uncommon
+  { text: "Retired Adventurer", rewardModifierPercent: 0, weight: 5 },
+
+  // weight: 1 = rare
+  { text: "Cult Member", rewardModifierPercent: 10, weight: 1 }
+];
+
+const externalComplication = [
+  // TODO: Fill in external complication option 1.
+  { text: "", rewardModifierPercent: 0 },
+
+  // TODO: Fill in external complication option 2.
+  { text: "", rewardModifierPercent: 0 },
+
+  // TODO: Fill in external complication option 3.
+  { text: "", rewardModifierPercent: 0 },
+
+  // TODO: Fill in external complication option 4.
+  { text: "", rewardModifierPercent: 0 },
+
+  // TODO: Fill in external complication option 5.
+  { text: "", rewardModifierPercent: 0 }
+];
+
+const dangerousContract = [
+  // TODO: Fill in dangerous contract option 1.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in dangerous contract option 2.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in dangerous contract option 3.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in dangerous contract option 4.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in dangerous contract option 5.
+  { text: "", baseRewardGp: 0 }
+];
+
+const weirdContract = [
+  // TODO: Fill in weird contract option 1.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in weird contract option 2.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in weird contract option 3.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in weird contract option 4.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in weird contract option 5.
+  { text: "", baseRewardGp: 0 }
+];
+
+const socialContract = [
+  // TODO: Fill in social contract option 1.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in social contract option 2.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in social contract option 3.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in social contract option 4.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in social contract option 5.
+  { text: "", baseRewardGp: 0 }
+];
+
+const investigationContract = [
+  // TODO: Fill in investigation contract option 1.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in investigation contract option 2.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in investigation contract option 3.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in investigation contract option 4.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in investigation contract option 5.
+  { text: "", baseRewardGp: 0 },
+
+  // TODO: Fill in Kurovian-only investigation contract option.
+  // This option is only visible/rollable when Kurovian Flavour is enabled.
+  { text: "", baseRewardGp: 0, kurovian: true }
+];
+
+const weirdPayment = [
+  // TODO: Fill in weird payment option 1.
+  { text: "", rewardText: "" },
+
+  // TODO: Fill in weird payment option 2.
+  { text: "", rewardText: "" },
+
+  // TODO: Fill in weird payment option 3.
+  { text: "", rewardText: "" },
+
+  // TODO: Fill in weird payment option 4.
+  { text: "", rewardText: "" },
+
+  // TODO: Fill in weird payment option 5.
+  { text: "", rewardText: "" },
+
+  // TODO: Fill in Kurovian-only weird payment option.
+  // This option is only visible/rollable when Kurovian Flavour is enabled.
+  { text: "", rewardText: "", kurovian: true }
+];
+
+const TAG_TABLES = {
+  contract,
+  employer,
+  externalComplication,
+  dangerousContract,
+  weirdContract,
+  socialContract,
+  investigationContract,
+  weirdPayment
+};
+
+const TAG_LABELS = {
+  contract: "Contract",
+  employer: "Employer",
+  externalComplication: "External Complication",
+  dangerousContract: "Dangerous Contract",
+  weirdContract: "Weird Contract",
+  socialContract: "Social Contract",
+  investigationContract: "Investigation Contract",
+  weirdPayment: "Weird Payment"
+};
+
+async function generateLegitimateContract(mode, options = {}) {
+  validateLegitimateTables();
+
+  const kurovianFlavour = options.kurovianFlavour === true;
+
+  const seed =
+    mode === "automatic"
+      ? rollLegitimateSeed()
+      : await chooseLegitimateSeed();
+
+  const selectedTags = {};
+
+  for (const tagKey of seed.tagKeys) {
+    selectedTags[tagKey] =
+      mode === "manual"
+        ? await chooseTagManually(tagKey, kurovianFlavour)
+        : chooseTagAutomatically(tagKey, kurovianFlavour);
+  }
+
+  const sentence = buildContractSentence(seed, selectedTags);
+  const reward = calculateReward(seed, selectedTags);
+
+  return {
+    seedName: seed.name,
+    kurovianFlavour,
+    sentence,
+    rewardText: reward.rewardText,
+    rewardDetails: reward.details,
+    tags: selectedTags
+  };
+}
+
+function validateLegitimateTables() {
+  const seedTotal = LEGITIMATE_SEEDS.reduce((sum, seed) => sum + seed.percent, 0);
+
+  if (seedTotal !== 100) {
+    throw new Error(`Legitimate seed chances must total 100%, but currently total ${seedTotal}%.`);
+  }
+
+  for (const [tagKey, entries] of Object.entries(TAG_TABLES)) {
+    if (entries.length < 5) {
+      throw new Error(`${tagKey} must have at least 5 entries.`);
+    }
+  }
+}
+
+async function chooseLegitimateSeed() {
+  const chosenId = await chooseFromList({
+    title: "Legitimate Contract Seed",
+    prompt: "Choose seed",
+    items: LEGITIMATE_SEEDS.map((seed) => {
+      return {
+        label: seed.name,
+        description: seed.formulaText,
+        colour: style.colours.oldBone
+      };
+    })
+  });
+
+  const result = LEGITIMATE_SEEDS.find((seed) => seed.id === chosenId);
+
+  if (result === undefined) {
+    throw new Error(`No legitimate seed found for option ${chosenId}.`);
+  }
+
+  return result;
+}
+
+function rollLegitimateSeed() {
+  const roll = rollDie(100);
+  let minimum = 1;
+
+  for (const seed of LEGITIMATE_SEEDS) {
+    const maximum = minimum + seed.percent - 1;
+
+    if (roll >= minimum && roll <= maximum) {
+      return seed;
+    }
+
+    minimum = maximum + 1;
+  }
+
+  throw new Error(`No legitimate seed found for d100 roll ${roll}.`);
+}
+
+async function chooseTagManually(tagKey, kurovianFlavour) {
+  const availableEntries = getAvailableTagEntries(tagKey, kurovianFlavour);
+
+  const chosenIndex = await chooseFromList({
+    title: TAG_LABELS[tagKey],
+    statusLines: kurovianFlavour
+      ? [
+          style.subtitle("Kurovian Flavour enabled: Kurovian-only options are available.")
+        ]
+      : [],
+    prompt: "Choose tag",
+    items: availableEntries.map((entry, index) => {
+      return {
+        label: getTagMenuText(tagKey, entry, index),
+        colour: getTagColour(tagKey, entry)
+      };
+    })
+  });
+
+  return availableEntries[chosenIndex - 1];
+}
+
+function chooseTagAutomatically(tagKey, kurovianFlavour) {
+  const availableEntries = getAvailableTagEntries(tagKey, kurovianFlavour);
+  const filledEntries = availableEntries.filter((entry) => isFilledEntry(entry));
+  const usableTable = filledEntries.length > 0 ? filledEntries : availableEntries;
+
+  if (tagKey === "employer") {
+    return chooseWeightedEntry(usableTable);
+  }
+
+  const chosenIndex = rollDie(usableTable.length) - 1;
+  return usableTable[chosenIndex];
+}
+
+function getAvailableTagEntries(tagKey, kurovianFlavour) {
+  const table = TAG_TABLES[tagKey];
+
+  const availableEntries = table.filter((entry) => {
+    if (isKurovianEntry(entry)) {
+      return kurovianFlavour;
+    }
+
+    return true;
+  });
+
+  if (availableEntries.length === 0) {
+    throw new Error(`${TAG_LABELS[tagKey]} has no available entries.`);
+  }
+
+  return availableEntries;
+}
+
+function isKurovianEntry(entry) {
+  return entry.kurovian === true;
+}
+
+function chooseWeightedEntry(entries) {
+  const totalWeight = entries.reduce((sum, entry) => {
+    return sum + getEntryWeight(entry);
+  }, 0);
+
+  if (totalWeight <= 0) {
+    const chosenIndex = rollDie(entries.length) - 1;
+    return entries[chosenIndex];
+  }
+
+  let roll = rollDie(totalWeight);
+
+  for (const entry of entries) {
+    roll -= getEntryWeight(entry);
+
+    if (roll <= 0) {
+      return entry;
     }
   }
 
-  throw new Error(`Character not on Roku ABC123 keyboard: ${character}`);
+  return entries[entries.length - 1];
 }
 
-async function pressAndWait(this: CustomWorld, button: string) {
-  log.info(button);
+function getEntryWeight(entry) {
+  const weight = Number(entry.weight);
 
-  if (button === "select") {
-    await this.pressButton("enter");
-  } else {
-    await this.pressButton(button);
+  if (!Number.isFinite(weight) || weight <= 0) {
+    return 1;
   }
 
-  await sleep(BUTTON_PRESS_DELAY_MS);
+  return Math.floor(weight);
 }
 
-/**
- * Initial focus is on the top-left control rail, not on "a".
- *
- * Example:
- * - "a" is col 0, but needs 1 right press.
- * - "g" is col 6, but needs 7 right presses.
- * - "1" is col 7, but needs 8 right presses.
- */
-async function syncRokuSearchKeyboardTo(
-  this: CustomWorld,
-  targetRow: number,
-  targetCol: number,
-) {
-  const rightPresses = targetCol + ROKU_LEFT_CONTROL_RAIL_OFFSET;
-
-  for (let i = 0; i < rightPresses; i += 1) {
-    await pressAndWait.call(this, "right");
-  }
-
-  for (let i = 0; i < targetRow; i += 1) {
-    await pressAndWait.call(this, "down");
-  }
+function isFilledEntry(entry) {
+  return (
+    getCleanText(entry.text) !== "" ||
+    getCleanText(entry.rewardText) !== "" ||
+    Number(entry.baseRewardGp) > 0
+  );
 }
 
-async function executeButtonSequence(this: CustomWorld, buttonSequence: string[]) {
-  for (let i = 0; i < buttonSequence.length; i += 1) {
-    await pressAndWait.call(this, buttonSequence[i]);
+function getTagMenuText(tagKey, entry, index) {
+  const text = getCleanText(entry.text);
+  const rewardText = getCleanText(entry.rewardText);
+  const markers = [];
+
+  if (tagKey === "employer") {
+    markers.push(`weight ${getEntryWeight(entry)}`);
   }
+
+  if (isKurovianEntry(entry)) {
+    markers.push("Kurovian");
+  }
+
+  const markerText = markers.length > 0
+    ? ` ${style.dim(`[${markers.join(", ")}]`)}`
+    : "";
+
+  if (text !== "") {
+    return `${text}${markerText}`;
+  }
+
+  if (rewardText !== "") {
+    return `${rewardText}${markerText}`;
+  }
+
+  return `[empty ${TAG_LABELS[tagKey]} option ${index + 1}]${markerText}`;
 }
 
-export async function typeOnRokuSearchKeyboard(
-  this: CustomWorld,
-  input: string,
-) {
-  if (!input.length) {
-    return;
+function buildContractSentence(seed, tags) {
+  if (seed.name === "Legitimate Simple") {
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.contract, "contract")}.`;
   }
 
-  const normalizedInput = input.toLowerCase();
-  const focusCoords = getRokuAbc123KeyCoords(normalizedInput[0]);
+  if (seed.name === "Legitimate Complicated") {
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.contract, "contract")}, but ${asAction(tags.externalComplication, "external complication")}.`;
+  }
 
-  log.info(
-    `Syncing Roku keyboard to first character "${normalizedInput[0]}" at row ${focusCoords.row}, col ${focusCoords.col}`,
+  if (seed.name === "Legitimate Dangerous") {
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.dangerousContract, "dangerous contract")}.`;
+  }
+
+  if (seed.name === "Legitimate Weird") {
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.weirdContract, "weird contract")}.`;
+  }
+
+  if (seed.name === "Legitimate Social") {
+    return `${asSubject(tags.employer, "employer")} is asking for help to ${asAction(tags.socialContract, "social contract")}.`;
+  }
+
+  if (seed.name === "Legitimate Investigation") {
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.investigationContract, "investigation contract")}.`;
+  }
+
+  if (seed.name === "Legitimate Weird Payment") {
+    return `A notice asks for people to ${asAction(tags.dangerousContract, "dangerous contract")}.`;
+  }
+
+  return "A legitimate contract has been posted.";
+}
+
+function calculateReward(seed, tags) {
+  if (seed.rewardOverrideTag !== undefined) {
+    const paymentTag = tags[seed.rewardOverrideTag];
+
+    return {
+      rewardText: getWeirdPaymentText(paymentTag),
+      details: {
+        overriddenBy: seed.rewardOverrideTag
+      }
+    };
+  }
+
+  const contractTagKey = seed.tagKeys.find((tagKey) =>
+    tagKey.toLowerCase().includes("contract")
   );
 
-  await syncRokuSearchKeyboardTo.call(
-    this,
-    focusCoords.row,
-    focusCoords.col,
+  if (contractTagKey === undefined) {
+    return {
+      rewardText: "[reward value not filled]",
+      details: {
+        reason: "No contract tag found in seed."
+      }
+    };
+  }
+
+  const baseRewardGp = Number(tags[contractTagKey].baseRewardGp);
+
+  if (!Number.isFinite(baseRewardGp) || baseRewardGp <= 0) {
+    return {
+      rewardText: "[reward value not filled]",
+      details: {
+        reason: `${contractTagKey} has no baseRewardGp value.`
+      }
+    };
+  }
+
+  const totalTagModifierPercent = seed.tagKeys
+    .filter((tagKey) => tagKey !== contractTagKey)
+    .reduce((sum, tagKey) => {
+      return sum + getRewardModifier(tags[tagKey]);
+    }, 0);
+
+  const driftPercent = getRandomRewardDriftPercent();
+
+  const tagModifierGp = calculateVisibleGpModifier(
+    baseRewardGp,
+    totalTagModifierPercent
   );
 
-  const buttonSequence = await generateTypingCommands(
-    normalizedInput,
-    ROKU_ABC123_GRID,
-    [[]],
-    [[]],
-    focusCoords.col,
-    focusCoords.row,
-    true,
-    "Roku",
+  const afterTagModifiersGp = baseRewardGp + tagModifierGp;
+
+  const driftModifierGp = calculateVisibleGpModifier(
+    afterTagModifiersGp,
+    driftPercent
   );
 
-  log.info(`Generated sequence: ${JSON.stringify(buttonSequence)}`);
+  const finalRewardGp = Math.max(
+    1,
+    Math.floor(afterTagModifiersGp + driftModifierGp)
+  );
 
-  await executeButtonSequence.call(this, buttonSequence);
+  return {
+    rewardText: `${finalRewardGp} GP`,
+    details: {
+      baseRewardGp,
+      totalTagModifierPercent,
+      tagModifierGp,
+      afterTagModifiersGp,
+      driftPercent,
+      driftModifierGp,
+      finalRewardGp
+    }
+  };
 }
 
-export default typeOnRokuSearchKeyboard;
+function calculateVisibleGpModifier(baseRewardGp, modifierPercent) {
+  if (!Number.isFinite(modifierPercent) || modifierPercent === 0) {
+    return 0;
+  }
+
+  const exactChange = baseRewardGp * (modifierPercent / 100);
+  const absoluteChange = Math.abs(exactChange);
+
+  // This keeps the modifier percentage-based for larger rewards,
+  // but prevents small rewards like 10 GP from swallowing 5% changes.
+  const visibleChange = Math.max(1, Math.floor(absoluteChange));
+
+  if (modifierPercent > 0) {
+    return visibleChange;
+  }
+
+  return -visibleChange;
+}
+
+function getRandomRewardDriftPercent() {
+  if (REWARD_DRIFT_RANGE_PERCENT <= 0) {
+    return 0;
+  }
+
+  return rollDie(REWARD_DRIFT_RANGE_PERCENT * 2 + 1) -
+    (REWARD_DRIFT_RANGE_PERCENT + 1);
+}
+
+function getRewardModifier(entry) {
+  const modifier = Number(entry.rewardModifierPercent);
+
+  if (!Number.isFinite(modifier)) {
+    return 0;
+  }
+
+  return modifier;
+}
+
+function getWeirdPaymentText(entry) {
+  const rewardText = getCleanText(entry.rewardText);
+  const text = getCleanText(entry.text);
+
+  if (rewardText !== "") {
+    return rewardText;
+  }
+
+  if (text !== "") {
+    return text;
+  }
+
+  return "[weird payment not filled]";
+}
+
+function asSubject(entry, fallbackName) {
+  return sentenceCase(getTagText(entry, fallbackName));
+}
+
+function asAction(entry, fallbackName) {
+  return getTagText(entry, fallbackName);
+}
+
+function getTagText(entry, fallbackName) {
+  const text = getCleanText(entry.text);
+
+  if (text !== "") {
+    return text;
+  }
+
+  return `[${fallbackName} not filled]`;
+}
+
+function getCleanText(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function sentenceCase(text) {
+  if (text.length === 0) {
+    return text;
+  }
+
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function getTagColour(tagKey, entry) {
+  if (isKurovianEntry(entry)) {
+    return style.colours.cursedViolet;
+  }
+
+  if (tagKey === "employer") {
+    return style.colours.tarnishedGold;
+  }
+
+  if (tagKey === "externalComplication") {
+    return style.colours.rust;
+  }
+
+  if (tagKey === "weirdPayment") {
+    return style.colours.cursedViolet;
+  }
+
+  if (tagKey.toLowerCase().includes("contract")) {
+    return style.colours.oldBone;
+  }
+
+  return style.colours.graveAsh;
+}
+
+module.exports = {
+  generateLegitimateContract,
+  validateLegitimateTables,
+
+  // Exported for the Electron desktop GUI.
+  LEGITIMATE_SEEDS,
+  TAG_TABLES,
+  TAG_LABELS,
+  REWARD_DRIFT_RANGE_PERCENT
+};
