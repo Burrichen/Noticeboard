@@ -1,5 +1,5 @@
 {
   "mode": "manual",
   "kurovianFlavour": true,
-  "interfaceMode": "cli"
+  "interfaceMode": "gui"
 }

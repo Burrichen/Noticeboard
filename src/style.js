@@ -2,6 +2,7 @@ const colours = {
   reset: "\x1b[0m",
   bold: "\x1b[1m",
   dim: "\x1b[2m",
+  reverse: "\x1b[7m",
 
   // Dark fantasy palette
   blood: "\x1b[38;5;124m",
@@ -16,7 +17,6 @@ const colours = {
   ghostCyan: "\x1b[38;5;109m",
   rust: "\x1b[38;5;166m",
 
-  // Basic fallbacks
   red: "\x1b[31m",
   green: "\x1b[32m",
   yellow: "\x1b[33m",
@@ -52,6 +52,18 @@ function menuNumber(number) {
 
 function optionName(text, colourCode = colours.oldBone) {
   return colour(bold(text), colourCode);
+}
+
+function selectedOptionName(text, colourCode = colours.oldBone) {
+  return `${colours.reverse}${colourCode}${colours.bold}${text}${colours.reset}`;
+}
+
+function selectedSubtitle(text) {
+  return `${colours.reverse}${colours.graveAsh}${text}${colours.reset}`;
+}
+
+function cursor(text) {
+  return colour(text, colours.tarnishedGold);
 }
 
 function prompt(text) {
@@ -115,6 +127,9 @@ module.exports = {
   subtitle,
   menuNumber,
   optionName,
+  selectedOptionName,
+  selectedSubtitle,
+  cursor,
   prompt,
   error,
   success,
