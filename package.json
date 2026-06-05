@@ -1,10 +1,13 @@
 {
-  "name": "dnd-noticeboard-generator-js",
+  "name": "dnd-noticeboard-generator",
   "version": "1.0.0",
-  "private": true,
-  "description": "A terminal-based DND noticeboard generator.",
   "main": "src/main.js",
   "scripts": {
-    "start": "node src/main.js"
+    "start": "node src/launcher.js",
+    "cli": "node src/main.js",
+    "desktop": "electron electron/main.js"
+  },
+  "devDependencies": {
+    "electron": "42.3.0"
   }
 }
