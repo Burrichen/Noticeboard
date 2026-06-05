@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>DND Noticeboard Generator</title>
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Burrich's</div>
+        <h1>Noticeboard Generator</h1>
+        <p id="heroSubtitle">
+          A generator designed to provide a growing library of different contracts.
+        </p>
+      </div>
+
+      <div class="sigil" aria-hidden="true">✒</div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel settings-panel">
+        <div class="panel-header">Settings</div>
+        <div class="panel-body" id="settingsPanel"></div>
+      </aside>
+
+      <main class="panel stage-panel">
+        <div id="stagePanel"></div>
+      </main>
+
+      <aside class="panel board-panel">
+        <div class="panel-header">Current Board</div>
+        <div class="panel-body" id="boardPanel"></div>
+      </aside>
+    </section>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

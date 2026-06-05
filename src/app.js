@@ -1,4 +1,4 @@
-const { askSingleKeyNumber, pause } = require("./input");
+const { chooseFromList, pause } = require("./input");
 const { generateNoticeboard } = require("./generator");
 const { loadSettings, saveSettings } = require("./settings");
 const style = require("./style");
@@ -7,12 +7,33 @@ const loadedSettings = loadSettings();
 
 let currentMode = loadedSettings.mode;
 let kurovianFlavour = loadedSettings.kurovianFlavour;
+let interfaceMode = loadedSettings.interfaceMode;
 
 async function runApp() {
   while (true) {
-    printMainMenu();
-
-    const choice = await askSingleKeyNumber("Choose an option: ", 1, 3);
+    const choice = await chooseFromList({
+      title: "DND Noticeboard Generator",
+      statusLines: [
+        `${style.dim("Generation mode:")} ${colourMode(currentMode)}`,
+        `${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`,
+        `${style.dim("Launch next time:")} ${colourInterfaceMode(interfaceMode)}`
+      ],
+      prompt: "Choose an option",
+      items: [
+        {
+          label: "Start",
+          colour: style.colours.witchGreen
+        },
+        {
+          label: "Options",
+          colour: style.colours.ghostCyan
+        },
+        {
+          label: "Exit",
+          colour: style.colours.blood
+        }
+      ]
+    });
 
     if (choice === 1) {
       await startGenerator();
@@ -23,6 +44,7 @@ async function runApp() {
     }
 
     if (choice === 3) {
+      console.clear();
       console.log(style.dim("Goodbye."));
       return;
     }
@@ -43,86 +65,79 @@ async function startGenerator() {
 
 async function openOptions() {
   while (true) {
-    console.clear();
+    const nextMode = getNextGenerationMode(currentMode);
+    const nextInterfaceMode = interfaceMode === "gui" ? "cli" : "gui";
 
-    console.log(style.line());
-    console.log(style.title(" Options"));
-    console.log(style.line());
-    console.log(`${style.dim("Generation mode:")} ${colourMode(currentMode)}`);
-    console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`);
-    console.log("");
-    console.log(`${style.menuNumber(1)} ${style.optionName("Manual", style.colours.midnightBlue)}`);
-    console.log(`${style.menuNumber(2)} ${style.optionName("Semi-automatic", style.colours.cursedViolet)}`);
-    console.log(`${style.menuNumber(3)} ${style.optionName("Automatic", style.colours.witchGreen)}`);
-    console.log(`${style.menuNumber(4)} ${style.optionName("Toggle Kurovian Flavour", style.colours.tarnishedGold)}`);
-    console.log(`${style.menuNumber(5)} ${style.optionName("Back", style.colours.oldBone)}`);
-    console.log("");
+    const choice = await chooseFromList({
+      title: "Options",
+      statusLines: [
+        `${style.dim("Generation mode:")} ${colourMode(currentMode)}`,
+        `${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`,
+        `${style.dim("Launch next time:")} ${colourInterfaceMode(interfaceMode)}`
+      ],
+      prompt: "Choose an option",
+      items: [
+        {
+          label: `Generation Mode: ${formatMode(currentMode)}`,
+          description: getGenerationModeDescription(currentMode),
+          colour: getModeColour(currentMode)
+        },
+        {
+          label: `Launch Next Time: ${formatInterfaceMode(interfaceMode)}`,
+          description: getInterfaceModeDescription(interfaceMode),
+          colour: interfaceMode === "gui" ? style.colours.ghostCyan : style.colours.tarnishedGold
+        },
+        {
+          label: `Kurovian Flavour: ${kurovianFlavour ? "Enabled" : "Disabled"}`,
+          description: kurovianFlavour
+            ? "Kurovian-only entries may appear. Select to disable."
+            : "Kurovian-only entries are hidden. Select to enable.",
+          colour: kurovianFlavour ? style.colours.cursedViolet : style.colours.graveAsh
+        },
+        {
+          label: "Back",
+          colour: style.colours.oldBone
+        }
+      ]
+    });
 
-    const choice = await askSingleKeyNumber("Choose an option: ", 1, 5);
-
-    if (choice === 5) {
+    if (choice === 4) {
       return;
     }
 
     if (choice === 1) {
-      currentMode = "manual";
+      currentMode = getNextGenerationMode(currentMode);
     }
 
     if (choice === 2) {
-      currentMode = "semiAutomatic";
+      interfaceMode = interfaceMode === "gui" ? "cli" : "gui";
     }
 
     if (choice === 3) {
-      currentMode = "automatic";
-    }
-
-    if (choice === 4) {
       kurovianFlavour = !kurovianFlavour;
     }
 
     saveCurrentSettings();
-
-    if (choice === 4) {
-      console.log(
-        style.success(
-          `Kurovian Flavour ${kurovianFlavour ? "enabled" : "disabled"}.`
-        )
-      );
-    } else {
-      console.log(style.success(`Mode set to ${formatMode(currentMode)}.`));
-    }
   }
 }
 
 function saveCurrentSettings() {
   saveSettings({
     mode: currentMode,
-    kurovianFlavour
+    kurovianFlavour,
+    interfaceMode
   });
 }
 
-function printMainMenu() {
+function printNoticeboardResult(result) {
   console.clear();
 
-  console.log(style.line());
-  console.log(style.title(" DND Noticeboard Generator"));
-  console.log(style.line());
-  console.log(`${style.dim("Generation mode:")} ${colourMode(currentMode)}`);
-  console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(kurovianFlavour)}`);
-  console.log("");
-  console.log(`${style.menuNumber(1)} ${style.optionName("Start", style.colours.witchGreen)}`);
-  console.log(`${style.menuNumber(2)} ${style.optionName("Options", style.colours.ghostCyan)}`);
-  console.log(`${style.menuNumber(3)} ${style.optionName("Exit", style.colours.blood)}`);
-  console.log("");
-}
-
-function printNoticeboardResult(result) {
-  console.log("");
   console.log(style.line());
   console.log(style.title(" Generated Noticeboard"));
   console.log(style.line());
   console.log(`${style.dim("Mode:")} ${colourMode(result.mode)}`);
   console.log(`${style.dim("Kurovian Flavour:")} ${colourKurovianFlavour(result.kurovianFlavour)}`);
+  console.log(`${style.dim("Launch next time:")} ${colourInterfaceMode(interfaceMode)}`);
   console.log(`${style.dim("Quality:")} ${style.optionName(result.quality.name, style.colours.oldBone)}`);
   console.log(`${style.dim("Size:")} ${style.optionName(result.size.name, style.colours.tarnishedGold)}`);
   console.log(`${style.dim("Notice count:")} ${style.optionName(String(result.noticeCount), style.colours.oldBone)}`);
@@ -147,16 +162,40 @@ function printLegitimateContract(contract) {
   );
 }
 
-function colourMode(mode) {
+function getNextGenerationMode(mode) {
   if (mode === "manual") {
-    return style.optionName("Manual", style.colours.midnightBlue);
+    return "semiAutomatic";
   }
 
   if (mode === "semiAutomatic") {
-    return style.optionName("Semi-automatic", style.colours.cursedViolet);
+    return "automatic";
   }
 
-  return style.optionName("Automatic", style.colours.witchGreen);
+  return "manual";
+}
+
+function getGenerationModeDescription(mode) {
+  if (mode === "manual") {
+    return "Choose board, notice types, contract types, legitimate seeds, and tags yourself.";
+  }
+
+  if (mode === "semiAutomatic") {
+    return "Choose quality and size. Pick legitimate seeds; tags roll automatically.";
+  }
+
+  return "Everything rolls immediately.";
+}
+
+function getInterfaceModeDescription(value) {
+  if (value === "gui") {
+    return "Running npm start will open the desktop GUI.";
+  }
+
+  return "Running npm start will open the terminal CLI.";
+}
+
+function colourMode(mode) {
+  return style.optionName(formatMode(mode), getModeColour(mode));
 }
 
 function colourKurovianFlavour(enabled) {
@@ -165,6 +204,26 @@ function colourKurovianFlavour(enabled) {
   }
 
   return style.optionName("Disabled", style.colours.graveAsh);
+}
+
+function colourInterfaceMode(value) {
+  if (value === "gui") {
+    return style.optionName("GUI", style.colours.ghostCyan);
+  }
+
+  return style.optionName("CLI", style.colours.tarnishedGold);
+}
+
+function getModeColour(mode) {
+  if (mode === "manual") {
+    return style.colours.midnightBlue;
+  }
+
+  if (mode === "semiAutomatic") {
+    return style.colours.cursedViolet;
+  }
+
+  return style.colours.witchGreen;
 }
 
 function formatMode(mode) {
@@ -177,6 +236,14 @@ function formatMode(mode) {
   }
 
   return "Automatic";
+}
+
+function formatInterfaceMode(value) {
+  if (value === "gui") {
+    return "GUI";
+  }
+
+  return "CLI";
 }
 
 module.exports = {

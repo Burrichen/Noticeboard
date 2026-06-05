@@ -1,4 +1,5 @@
 {
   "mode": "manual",
-  "kurovianFlavour": true
+  "kurovianFlavour": true,
+  "interfaceMode": "cli"
 }

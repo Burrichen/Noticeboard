@@ -5,7 +5,8 @@ const SETTINGS_PATH = path.join(process.cwd(), "settings.json");
 
 const DEFAULT_SETTINGS = {
   mode: "manual",
-  kurovianFlavour: false
+  kurovianFlavour: false,
+  interfaceMode: "cli"
 };
 
 function loadSettings() {
@@ -17,32 +18,45 @@ function loadSettings() {
     const raw = fs.readFileSync(SETTINGS_PATH, "utf8");
     const parsed = JSON.parse(raw);
 
-    return {
-      mode: isValidMode(parsed.mode) ? parsed.mode : DEFAULT_SETTINGS.mode,
-      kurovianFlavour:
-        typeof parsed.kurovianFlavour === "boolean"
-          ? parsed.kurovianFlavour
-          : DEFAULT_SETTINGS.kurovianFlavour
-    };
+    return sanitizeSettings(parsed);
   } catch {
     return { ...DEFAULT_SETTINGS };
   }
 }
 
 function saveSettings(settings) {
-  const safeSettings = {
-    mode: isValidMode(settings.mode) ? settings.mode : DEFAULT_SETTINGS.mode,
-    kurovianFlavour:
-      typeof settings.kurovianFlavour === "boolean"
-        ? settings.kurovianFlavour
-        : DEFAULT_SETTINGS.kurovianFlavour
-  };
+  const currentSettings = loadSettings();
+
+  const safeSettings = sanitizeSettings({
+    ...currentSettings,
+    ...settings
+  });
 
   fs.writeFileSync(SETTINGS_PATH, JSON.stringify(safeSettings, null, 2));
 }
 
+function sanitizeSettings(settings) {
+  return {
+    mode: isValidMode(settings.mode) ? settings.mode : DEFAULT_SETTINGS.mode,
+
+    kurovianFlavour:
+      typeof settings.kurovianFlavour === "boolean"
+        ? settings.kurovianFlavour
+        : DEFAULT_SETTINGS.kurovianFlavour,
+
+    interfaceMode:
+      isValidInterfaceMode(settings.interfaceMode)
+        ? settings.interfaceMode
+        : DEFAULT_SETTINGS.interfaceMode
+  };
+}
+
 function isValidMode(mode) {
   return mode === "manual" || mode === "semiAutomatic" || mode === "automatic";
+}
+
+function isValidInterfaceMode(interfaceMode) {
+  return interfaceMode === "cli" || interfaceMode === "gui";
 }
 
 module.exports = {
