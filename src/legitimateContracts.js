@@ -212,24 +212,22 @@ const socialContract = [
 
 
 const investigationContract = [
-  // TODO: Fill in investigation contract option 1.
-  { text: "", baseRewardGp: 0 },
+  // TODO: Investigation Contract Area
+  { text: "infiltrate a masked ball", baseRewardGp: 150, weight: 5 },
 
-  // TODO: Fill in investigation contract option 2.
-  { text: "", baseRewardGp: 0 },
+  { text: "find a missing person", baseRewardGp: 150, weight: 4 },
 
-  // TODO: Fill in investigation contract option 3.
-  { text: "", baseRewardGp: 0 },
+  { text: "solve a murder", baseRewardGp: 0, weight: 3 },
 
-  // TODO: Fill in investigation contract option 4.
-  { text: "", baseRewardGp: 0 },
+  { text: "infiltrate a cult", baseRewardGp: 0, weight: 2 },
 
-  // TODO: Fill in investigation contract option 5.
   { text: "", baseRewardGp: 0 },
 
   // TODO: Fill in Kurovian-only investigation contract option.
   // This option is only visible/rollable when Kurovian Flavour is enabled.
-  { text: "KurovianOnly", baseRewardGp: 67, kurovian: true }
+  { text: "work for the Ambit", baseRewardGp: 500, kurovian: true, weight: 2 },
+  { text: "work as an blacksite Remnant operative", baseRewardGp: 400, kurovian: true, weight: 1 }
+
 ];
 
 const weirdPayment = [
