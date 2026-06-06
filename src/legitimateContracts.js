@@ -86,11 +86,18 @@ const LEGITIMATE_SEEDS = [
 //   weight: 3   uncommon
 //   weight: 1   rare
 //
+// Any tag can now use:
+//   additionalWeirdPayment: true
+//
+// If a selected tag has additionalWeirdPayment: true, the contract keeps its
+// normal GP reward and also rolls/selects a weirdPayment entry.
+//
 // Other normal tags should use:
 //   text: "your tag text here"
 //   rewardModifierPercent: -15
 //
-// weirdPayment ignores normal GP reward calculation and overwrites the payment.
+// weirdPayment ignores normal GP reward calculation when used by the
+// "Legitimate Weird Payment" seed.
 // Use:
 //   text: "payment description here"
 //   rewardText: "payment shown to the player here"
@@ -99,7 +106,7 @@ const LEGITIMATE_SEEDS = [
 // they will be ignored unless the whole table is blank.
 
 const contract = [
-    // TODO: Contract Area
+  // TODO: Contract Area
   { text: "work a job", baseRewardGp: 10, weight: 30 },
   { text: "escort an individual", baseRewardGp: 25, weight: 20 },
   { text: "deliver a sealed letter", baseRewardGp: 20, weight: 20 },
@@ -109,20 +116,21 @@ const contract = [
   { text: "carry supplies to an isolated house, farm or outpost", baseRewardGp: 20, weight: 5 },
   { text: "find a missing animal", baseRewardGp: 5, weight: 5 },
   { text: "retrieve a wagon, cart or boat stranded off-route", baseRewardGp: 30, weight: 5 },
-  { text: "escort a disliked official, collector or guild agent through town", baseRewardGp: 50, weight: 1 },
-
+  { text: "escort a disliked official, collector or guild agent through town", baseRewardGp: 50, weight: 1 }
 ];
 
 const employer = [
-      // TODO: Employer Area
-    // weight: 20 = fairly common
+  // TODO: Employer Area
+  // weight: 20 = fairly common
   { text: "Local Merchant", rewardModifierPercent: 5, weight: 20 },
   { text: "Farmer", rewardModifierPercent: -5, weight: 20 },
   { text: "Local Resident", rewardModifierPercent: -10, weight: 20 },
+
   // weight: 10 = normal
   { text: "Town Guard", rewardModifierPercent: 0, weight: 10 },
   { text: "Shopkeeper", rewardModifierPercent: 5, weight: 10 },
   { text: "Innkeeper", rewardModifierPercent: 0, weight: 10 },
+
   // weight: 5 = uncommon
   { text: "Retired Adventurer", rewardModifierPercent: 0, weight: 5 },
   { text: "Guild Representative", rewardModifierPercent: 10, weight: 5 },
@@ -138,11 +146,15 @@ const employer = [
   { text: "Scribe", rewardModifierPercent: 5, weight: 5 },
   { text: "Criminal Contact", rewardModifierPercent: 0, weight: 5 },
   { text: "Healer", rewardModifierPercent: -5, weight: 5 },
+
   // weight: 1 = rare
   { text: "Nobel", rewardModifierPercent: 75, weight: 1 },
   { text: "Anonymous Patron", rewardModifierPercent: 25, weight: 1 },
   { text: "Cursed Individual", rewardModifierPercent: 25, weight: 1 },
-  { text: "Cult Member", rewardModifierPercent: 10, weight: 1 }
+  { text: "Cult Member", rewardModifierPercent: 10, weight: 1 },
+
+    // >>> NEW: KUROVIAN FORCED EMPLOYER FOR AMBIT CONTRACTS <<<
+  { text: "Ambit representative", rewardModifierPercent: 25, weight: 1, kurovian: true }
 ];
 
 const externalComplication = [
@@ -168,14 +180,13 @@ const dangerousContract = [
   { text: "rescue someone trapped in a dangerous location", baseRewardGp: 200 },
   { text: "destroy a brood den", baseRewardGp: 125 },
   { text: "protect a caravan, farm or outpost from incoming attack", baseRewardGp: 150 },
-  { text: "capture a dangerous outlaw alive", baseRewardGp: 125 }, 
-  { text: "kill a dangerous outlaw", baseRewardGp: 75 }, 
-  { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125 }, 
-  { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150 }, 
-  { text: "guard a ritual. burial or ceremony from hostile forces", baseRewardGp: 125 }, 
+  { text: "capture a dangerous outlaw alive", baseRewardGp: 125 },
+  { text: "kill a dangerous outlaw", baseRewardGp: 75 },
+  { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125 },
+  { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150 },
+  { text: "guard a ritual. burial or ceremony from hostile forces", baseRewardGp: 125 },
   { text: "break into a dangerous location to recover captives or proof", baseRewardGp: 300 },
-  { text: "destroy a cursed object, relic or shrine", baseRewardGp: 150 }, 
-
+  { text: "destroy a cursed object, relic or shrine", baseRewardGp: 150 },
   { text: "survive a night in a cursed or haunted location", baseRewardGp: 300 }
 ];
 
@@ -210,24 +221,45 @@ const socialContract = [
   { text: "chaperone a troublesome noble guest for the day", baseRewardGp: 200, weight: 1 }
 ];
 
-
 const investigationContract = [
   // TODO: Investigation Contract Area
   { text: "infiltrate a masked ball", baseRewardGp: 150, weight: 5 },
+  { text: "assist solving a mundane crime", baseRewardGp: 100, weight: 5 },
+  { text: "follow someone without being seen", baseRewardGp: 50, weight: 5 },
+  { text: "investigate a secret meeting", baseRewardGp: 60, weight: 5 },
 
   { text: "find a missing person", baseRewardGp: 150, weight: 4 },
+  { text: "trace a stolen object through the criminal underworld", baseRewardGp: 100, weight: 4 },
+  { text: "infiltrate a hideout", baseRewardGp: 150, weight: 4 },
 
-  { text: "solve a murder", baseRewardGp: 0, weight: 3 },
+  { text: "solve a murder", baseRewardGp: 300, weight: 3 },
+  { text: "assist solving a magical crime", baseRewardGp: 150, weight: 3 },
 
-  { text: "infiltrate a cult", baseRewardGp: 0, weight: 2 },
+  { text: "infiltrate a cult", baseRewardGp: 400, weight: 2 },
+  { text: "find a witness who has gone missing", baseRewardGp: 200, weight: 2 },
 
-  { text: "", baseRewardGp: 0 },
+  { text: "track a kidnapper before they leave the country", baseRewardGp: 400, weight: 1 },
 
-  // TODO: Fill in Kurovian-only investigation contract option.
   // This option is only visible/rollable when Kurovian Flavour is enabled.
-  { text: "work for the Ambit", baseRewardGp: 500, kurovian: true, weight: 2 },
-  { text: "work as an blacksite Remnant operative", baseRewardGp: 400, kurovian: true, weight: 1 }
+  {
+    text: "work for the Ambit",
+    baseRewardGp: 500,
+    kurovian: true,
+    weight: 2,
+    additionalWeirdPayment: true,
+    forcedTags: {
+      employer: "Ambit representative"
+    }
+  },
 
+  // >>> NEW: ADDS WEIRD PAYMENT <<<
+  {
+    text: "work as an blacksite Remnant operative",
+    baseRewardGp: 400,
+    kurovian: true,
+    weight: 1,
+    additionalWeirdPayment: true
+  }
 ];
 
 const weirdPayment = [
@@ -239,7 +271,7 @@ const weirdPayment = [
   { text: "a rare magic item", rewardText: "a rare magic item", weight: 3 },
 
   { text: "a custom-made weapon, armor piece, tool, or arcane focus", rewardText: "a custom-made weapon, armor piece, tool, or arcane focus", weight: 2 },
-  { text: "property in a nearby village, town or city", rewardText: "property in a nearby village, town or city", weight: 2  },
+  { text: "property in a nearby village, town or city", rewardText: "property in a nearby village, town or city", weight: 2 },
   { text: "mayoralship of a village", rewardText: "mayoralship of a village", weight: 2 },
   { text: "A blessing, oath, or supernatural protection", rewardText: "A blessing, oath, or supernatural protection", weight: 2 },
   { text: "proficency training", rewardText: "proficency training", weight: 2 },
@@ -288,10 +320,27 @@ async function generateLegitimateContract(mode, options = {}) {
   const selectedTags = {};
 
   for (const tagKey of seed.tagKeys) {
-    selectedTags[tagKey] =
+    if (selectedTags[tagKey] !== undefined) {
+      continue;
+    }
+
+    const selectedTag =
       mode === "manual"
         ? await chooseTagManually(tagKey, kurovianFlavour)
         : chooseTagAutomatically(tagKey, kurovianFlavour);
+
+    selectedTags[tagKey] = selectedTag;
+
+    // >>> NEW: APPLY FORCED TAGS AFTER A TAG IS SELECTED <<<
+    applyForcedTags(selectedTags, selectedTag, kurovianFlavour);
+  }
+
+  // >>> NEW: IF A TAG REQUIRES AN EXTRA WEIRD PAYMENT, CHOOSE/ROLL IT NOW <<<
+  if (shouldAddAdditionalWeirdPayment(seed, selectedTags)) {
+    selectedTags.weirdPayment =
+      mode === "manual"
+        ? await chooseTagManually("weirdPayment", kurovianFlavour)
+        : chooseTagAutomatically("weirdPayment", kurovianFlavour);
   }
 
   const sentence = buildContractSentence(seed, selectedTags);
@@ -387,12 +436,8 @@ function chooseTagAutomatically(tagKey, kurovianFlavour) {
   const filledEntries = availableEntries.filter((entry) => isFilledEntry(entry));
   const usableTable = filledEntries.length > 0 ? filledEntries : availableEntries;
 
-  if (tagKey === "employer") {
-    return chooseWeightedEntry(usableTable);
-  }
-
-  const chosenIndex = rollDie(usableTable.length) - 1;
-  return usableTable[chosenIndex];
+  // >>> NEW: ALL TAG TABLES NOW RESPECT WEIGHT, NOT JUST EMPLOYER <<<
+  return chooseWeightedEntry(usableTable);
 }
 
 function getAvailableTagEntries(tagKey, kurovianFlavour) {
@@ -458,17 +503,93 @@ function isFilledEntry(entry) {
   );
 }
 
+// >>> NEW: CHECK WHETHER A SELECTED TAG ADDS A WEIRD PAYMENT <<<
+function shouldAddAdditionalWeirdPayment(seed, selectedTags) {
+  if (seed.rewardOverrideTag !== undefined) {
+    return false;
+  }
+
+  if (selectedTags.weirdPayment !== undefined) {
+    return false;
+  }
+
+  return Object.values(selectedTags).some((entry) => {
+    return entry.additionalWeirdPayment === true;
+  });
+}
+
+// >>> NEW: FORCE TAGS SUCH AS EMPLOYER FROM A SELECTED CONTRACT <<<
+function applyForcedTags(selectedTags, sourceEntry, kurovianFlavour) {
+  if (sourceEntry.forcedTags === undefined) {
+    return;
+  }
+
+  for (const [tagKey, forcedText] of Object.entries(sourceEntry.forcedTags)) {
+    selectedTags[tagKey] = findForcedTagEntry(tagKey, forcedText, kurovianFlavour);
+  }
+}
+
+// >>> NEW: FIND THE FORCED TAG ENTRY BY TEXT <<<
+function findForcedTagEntry(tagKey, forcedText, kurovianFlavour) {
+  const availableEntries = getAvailableTagEntries(tagKey, kurovianFlavour);
+  const normalisedForcedText = normaliseTagText(forcedText);
+
+  const result = availableEntries.find((entry) => {
+    return normaliseTagText(entry.text) === normalisedForcedText;
+  });
+
+  if (result === undefined) {
+    throw new Error(
+      `Forced tag "${forcedText}" was not found in ${TAG_LABELS[tagKey] ?? tagKey}.`
+    );
+  }
+
+  return result;
+}
+
+function normaliseTagText(value) {
+  return String(value).trim().toLowerCase();
+}
+
+function getForcedTagsText(forcedTags) {
+  return Object.entries(forcedTags)
+    .map(([tagKey, forcedText]) => {
+      return `forces ${TAG_LABELS[tagKey] ?? tagKey}: ${forcedText}`;
+    })
+    .join("; ");
+}
+
+function shouldAddAdditionalWeirdPayment(seed, selectedTags) {
+  if (seed.rewardOverrideTag !== undefined) {
+    return false;
+  }
+
+  return Object.values(selectedTags).some((entry) => {
+    return entry.additionalWeirdPayment === true;
+  });
+}
+
 function getTagMenuText(tagKey, entry, index) {
   const text = getCleanText(entry.text);
   const rewardText = getCleanText(entry.rewardText);
   const markers = [];
 
-  if (tagKey === "employer") {
+  if (entry.weight !== undefined) {
     markers.push(`weight ${getEntryWeight(entry)}`);
   }
 
   if (isKurovianEntry(entry)) {
     markers.push("Kurovian");
+  }
+
+  // >>> NEW: SHOWS WHEN A TAG ADDS WEIRD PAYMENT <<<
+  if (entry.additionalWeirdPayment === true) {
+    markers.push("adds weird payment");
+  }
+
+  // >>> NEW: SHOWS WHEN A TAG FORCES OTHER TAGS <<<
+  if (entry.forcedTags !== undefined) {
+    markers.push(getForcedTagsText(entry.forcedTags));
   }
 
   const markerText = markers.length > 0
@@ -579,8 +700,28 @@ function calculateReward(seed, tags) {
     Math.floor(afterTagModifiersGp + driftModifierGp)
   );
 
+  const baseRewardText = `${finalRewardGp} GP`;
+
+  // >>> NEW: GP REWARD PLUS ADDITIONAL WEIRD PAYMENT <<<
+  if (tags.weirdPayment !== undefined) {
+    return {
+      rewardText: `${baseRewardText} + ${getWeirdPaymentText(tags.weirdPayment)}`,
+      details: {
+        baseRewardGp,
+        totalTagModifierPercent,
+        tagModifierGp,
+        afterTagModifiersGp,
+        driftPercent,
+        driftModifierGp,
+        finalRewardGp,
+        additionalWeirdPayment: true,
+        weirdPayment: tags.weirdPayment
+      }
+    };
+  }
+
   return {
-    rewardText: `${finalRewardGp} GP`,
+    rewardText: baseRewardText,
     details: {
       baseRewardGp,
       totalTagModifierPercent,
@@ -681,6 +822,10 @@ function sentenceCase(text) {
 }
 
 function getTagColour(tagKey, entry) {
+  if (entry.additionalWeirdPayment === true) {
+    return style.colours.cursedViolet;
+  }
+
   if (isKurovianEntry(entry)) {
     return style.colours.cursedViolet;
   }

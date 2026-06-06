@@ -65,9 +65,6 @@ async function startGenerator() {
 
 async function openOptions() {
   while (true) {
-    const nextMode = getNextGenerationMode(currentMode);
-    const nextInterfaceMode = interfaceMode === "gui" ? "cli" : "gui";
-
     const choice = await chooseFromList({
       title: "Options",
       statusLines: [

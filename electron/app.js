@@ -453,6 +453,24 @@ function renderStage() {
     return;
   }
 
+  if (appState.stage === "legitimateAdditionalWeirdPayment") {
+    const availableEntries = getAvailableTagEntries("weirdPayment");
+
+    renderChoiceStage({
+      title: "Additional Weird Payment",
+      copy: "This contract includes normal GP and an additional weird payment.",
+      action: "choose-additional-weird-payment",
+      items: availableEntries.map((entry, index) => ({
+        label: getTagMenuText("weirdPayment", entry, index),
+        description: getTagDescription("weirdPayment", entry),
+        value: index,
+        kurovian: entry.kurovian === true,
+        colourClass: "kurovian"
+      }))
+    });
+    return;
+  }
+
   if (appState.stage === "result") {
     stagePanel.innerHTML = `
       <div class="stage-intro">
@@ -639,6 +657,12 @@ function handleChoice(action, index) {
 
   if (action === "choose-legit-tag") {
     chooseLegitimateTag(item.value);
+    return;
+  }
+
+  if (action === "choose-additional-weird-payment") {
+    chooseAdditionalWeirdPayment(item.value);
+    return;
   }
 }
 
@@ -710,11 +734,7 @@ function chooseLegitimateSeedById(seedId) {
   }
 
   if (appState.settings.mode === "semiAutomatic") {
-    const tags = {};
-
-    for (const tagKey of seed.tagKeys) {
-      tags[tagKey] = chooseTagAutomatically(tagKey);
-    }
+    const tags = chooseTagsAutomaticallyForSeed(seed);
 
     appState.board.notices.push({
       ...appState.board.pendingNotice,
@@ -723,6 +743,7 @@ function chooseLegitimateSeedById(seedId) {
 
     appState.board.pendingNotice = null;
     appState.board.currentNoticeNumber += 1;
+
     runSemiAutomaticUntilChoiceNeeded();
     return;
   }
@@ -741,15 +762,44 @@ function chooseLegitimateTag(availableEntryIndex) {
   const pending = appState.board.pendingLegitimate;
   const tagKey = pending.seed.tagKeys[pending.tagIndex];
   const availableEntries = getAvailableTagEntries(tagKey);
+  const selectedEntry = availableEntries[availableEntryIndex];
 
-  pending.tags[tagKey] = availableEntries[availableEntryIndex];
+  pending.tags[tagKey] = selectedEntry;
+
+  applyForcedTagsToSelection(pending.tags, selectedEntry);
+
   pending.tagIndex += 1;
+  advancePendingLegitimateTagIndex(pending);
 
   if (pending.tagIndex < pending.seed.tagKeys.length) {
     appState.stage = "legitimateTag";
     render();
     return;
   }
+
+  if (
+    shouldAddAdditionalWeirdPayment(pending.seed, pending.tags) &&
+    pending.tags.weirdPayment === undefined
+  ) {
+    appState.stage = "legitimateAdditionalWeirdPayment";
+    render();
+    return;
+  }
+
+  finalizePendingLegitimateContract();
+}
+
+function chooseAdditionalWeirdPayment(availableEntryIndex) {
+  const pending = appState.board.pendingLegitimate;
+  const availableEntries = getAvailableTagEntries("weirdPayment");
+
+  pending.tags.weirdPayment = availableEntries[availableEntryIndex];
+
+  finalizePendingLegitimateContract();
+}
+
+function finalizePendingLegitimateContract() {
+  const pending = appState.board.pendingLegitimate;
 
   appState.board.notices.push({
     ...appState.board.pendingNotice,
@@ -758,7 +808,17 @@ function chooseLegitimateTag(availableEntryIndex) {
 
   appState.board.pendingNotice = null;
   appState.board.pendingLegitimate = null;
+
   advanceManualNotice();
+}
+
+function advancePendingLegitimateTagIndex(pending) {
+  while (
+    pending.tagIndex < pending.seed.tagKeys.length &&
+    pending.tags[pending.seed.tagKeys[pending.tagIndex]] !== undefined
+  ) {
+    pending.tagIndex += 1;
+  }
 }
 
 function advanceManualNotice() {
@@ -821,11 +881,7 @@ function generateAutomaticNotice(number) {
   }
 
   const seed = rollLegitimateSeed();
-  const tags = {};
-
-  for (const tagKey of seed.tagKeys) {
-    tags[tagKey] = chooseTagAutomatically(tagKey);
-  }
+  const tags = chooseTagsAutomaticallyForSeed(seed);
 
   return {
     number,
@@ -851,16 +907,37 @@ function rollLegitimateSeed() {
   return appState.data.legitimateSeeds[appState.data.legitimateSeeds.length - 1];
 }
 
+function chooseTagsAutomaticallyForSeed(seed) {
+  const tags = {};
+
+  for (const tagKey of seed.tagKeys) {
+    if (tags[tagKey] !== undefined) {
+      continue;
+    }
+
+    const selectedEntry = chooseTagAutomatically(tagKey);
+
+    tags[tagKey] = selectedEntry;
+
+    applyForcedTagsToSelection(tags, selectedEntry);
+  }
+
+  if (
+    shouldAddAdditionalWeirdPayment(seed, tags) &&
+    tags.weirdPayment === undefined
+  ) {
+    tags.weirdPayment = chooseTagAutomatically("weirdPayment");
+  }
+
+  return tags;
+}
+
 function chooseTagAutomatically(tagKey) {
   const availableEntries = getAvailableTagEntries(tagKey);
   const filledEntries = availableEntries.filter((entry) => isFilledEntry(entry));
   const usableEntries = filledEntries.length > 0 ? filledEntries : availableEntries;
 
-  if (tagKey === "employer") {
-    return chooseWeightedEntry(usableEntries);
-  }
-
-  return usableEntries[rollDie(usableEntries.length) - 1];
+  return chooseWeightedEntry(usableEntries);
 }
 
 function buildLegitimateContract(seed, tags) {
@@ -938,7 +1015,9 @@ function calculateReward(seed, tags) {
 
   const totalTagModifierPercent = seed.tagKeys
     .filter((tagKey) => tagKey !== contractTagKey)
-    .reduce((sum, tagKey) => sum + getRewardModifier(tags[tagKey]), 0);
+    .reduce((sum, tagKey) => {
+      return sum + getRewardModifier(tags[tagKey]);
+    }, 0);
 
   const driftPercent = getRandomRewardDriftPercent();
   const tagModifierGp = calculateVisibleGpModifier(baseRewardGp, totalTagModifierPercent);
@@ -946,8 +1025,27 @@ function calculateReward(seed, tags) {
   const driftModifierGp = calculateVisibleGpModifier(afterTagModifiersGp, driftPercent);
   const finalRewardGp = Math.max(1, Math.floor(afterTagModifiersGp + driftModifierGp));
 
+  const baseRewardText = `${finalRewardGp} GP`;
+
+  if (tags.weirdPayment !== undefined) {
+    return {
+      rewardText: `${baseRewardText} + ${getWeirdPaymentText(tags.weirdPayment)}`,
+      details: {
+        baseRewardGp,
+        totalTagModifierPercent,
+        tagModifierGp,
+        afterTagModifiersGp,
+        driftPercent,
+        driftModifierGp,
+        finalRewardGp,
+        additionalWeirdPayment: true,
+        weirdPayment: tags.weirdPayment
+      }
+    };
+  }
+
   return {
-    rewardText: `${finalRewardGp} GP`,
+    rewardText: baseRewardText,
     details: {
       baseRewardGp,
       totalTagModifierPercent,
@@ -990,8 +1088,13 @@ function getWeirdPaymentText(entry) {
   const rewardText = getCleanText(entry.rewardText);
   const text = getCleanText(entry.text);
 
-  if (rewardText !== "") return rewardText;
-  if (text !== "") return text;
+  if (rewardText !== "") {
+    return rewardText;
+  }
+
+  if (text !== "") {
+    return text;
+  }
 
   return "[weird payment not filled]";
 }
@@ -1012,8 +1115,13 @@ function getTagMenuText(tagKey, entry, index) {
   const text = getCleanText(entry.text);
   const rewardText = getCleanText(entry.rewardText);
 
-  if (text !== "") return text;
-  if (rewardText !== "") return rewardText;
+  if (text !== "") {
+    return text;
+  }
+
+  if (rewardText !== "") {
+    return rewardText;
+  }
 
   return `[empty ${(appState.data.tagLabels[tagKey] ?? tagKey)} option ${index + 1}]`;
 }
@@ -1021,10 +1129,29 @@ function getTagMenuText(tagKey, entry, index) {
 function getTagDescription(tagKey, entry) {
   const parts = [];
 
-  if (tagKey === "employer") parts.push(`Weight ${getEntryWeight(entry)}`);
-  if (entry.rewardModifierPercent !== undefined) parts.push(`Reward modifier ${entry.rewardModifierPercent}%`);
-  if (entry.baseRewardGp !== undefined) parts.push(`Base reward ${entry.baseRewardGp} GP`);
-  if (entry.kurovian === true) parts.push("Kurovian-only");
+  if (entry.weight !== undefined) {
+    parts.push(`Weight ${getEntryWeight(entry)}`);
+  }
+
+  if (entry.rewardModifierPercent !== undefined) {
+    parts.push(`Reward modifier ${entry.rewardModifierPercent}%`);
+  }
+
+  if (entry.baseRewardGp !== undefined) {
+    parts.push(`Base reward ${entry.baseRewardGp} GP`);
+  }
+
+  if (entry.additionalWeirdPayment === true) {
+    parts.push("Adds weird payment");
+  }
+
+  if (entry.forcedTags !== undefined) {
+    parts.push(getForcedTagsText(entry.forcedTags));
+  }
+
+  if (entry.kurovian === true) {
+    parts.push("Kurovian-only");
+  }
 
   return parts.join(" • ");
 }
@@ -1058,6 +1185,57 @@ function chooseWeightedEntry(entries) {
 function getEntryWeight(entry) {
   const weight = Number(entry.weight);
   return Number.isFinite(weight) && weight > 0 ? Math.floor(weight) : 1;
+}
+
+function shouldAddAdditionalWeirdPayment(seed, tags) {
+  if (seed.rewardOverrideTag !== undefined) {
+    return false;
+  }
+
+  if (tags.weirdPayment !== undefined) {
+    return false;
+  }
+
+  return Object.values(tags).some((entry) => {
+    return entry.additionalWeirdPayment === true;
+  });
+}
+
+function applyForcedTagsToSelection(tags, sourceEntry) {
+  if (sourceEntry.forcedTags === undefined) {
+    return;
+  }
+
+  for (const [tagKey, forcedText] of Object.entries(sourceEntry.forcedTags)) {
+    tags[tagKey] = findForcedTagEntry(tagKey, forcedText);
+  }
+}
+
+function findForcedTagEntry(tagKey, forcedText) {
+  const availableEntries = getAvailableTagEntries(tagKey);
+  const normalisedForcedText = normaliseTagText(forcedText);
+
+  const result = availableEntries.find((entry) => {
+    return normaliseTagText(entry.text) === normalisedForcedText;
+  });
+
+  if (result === undefined) {
+    throw new Error(`Forced tag "${forcedText}" was not found in ${appState.data.tagLabels[tagKey] ?? tagKey}.`);
+  }
+
+  return result;
+}
+
+function normaliseTagText(value) {
+  return String(value).trim().toLowerCase();
+}
+
+function getForcedTagsText(forcedTags) {
+  return Object.entries(forcedTags)
+    .map(([tagKey, forcedText]) => {
+      return `forces ${appState.data.tagLabels[tagKey] ?? tagKey}: ${forcedText}`;
+    })
+    .join("; ");
 }
 
 function calculateAvailableContractCount() {
@@ -1177,13 +1355,22 @@ function getChoiceInstruction(count) {
 }
 
 function formatMode(mode) {
-  if (mode === "manual") return "Manual";
-  if (mode === "semiAutomatic") return "Semi-automatic";
+  if (mode === "manual") {
+    return "Manual";
+  }
+
+  if (mode === "semiAutomatic") {
+    return "Semi-automatic";
+  }
+
   return "Automatic";
 }
 
 function formatInterfaceMode(interfaceMode) {
-  if (interfaceMode === "gui") return "GUI";
+  if (interfaceMode === "gui") {
+    return "GUI";
+  }
+
   return "CLI";
 }
 
@@ -1192,24 +1379,54 @@ function formatNoticeOutcome(outcome) {
 }
 
 function getNoticeTypeClass(outcome) {
-  if (outcome === "Illegal") return "illegal";
-  if (outcome === "Illegitimate") return "illegitimate";
-  if (outcome === "Legitimate") return "legitimate";
-  if (outcome === "World-building Note") return "note";
+  if (outcome === "Illegal") {
+    return "illegal";
+  }
+
+  if (outcome === "Illegitimate") {
+    return "illegitimate";
+  }
+
+  if (outcome === "Legitimate") {
+    return "legitimate";
+  }
+
+  if (outcome === "World-building Note") {
+    return "note";
+  }
+
   return "";
 }
 
 function getQualityClass(name) {
-  if (name === "Underground") return "illegal";
-  if (name === "Decrepit") return "illegitimate";
-  if (name === "Good") return "legitimate";
-  if (name === "Pristine") return "note";
+  if (name === "Underground") {
+    return "illegal";
+  }
+
+  if (name === "Decrepit") {
+    return "illegitimate";
+  }
+
+  if (name === "Good") {
+    return "legitimate";
+  }
+
+  if (name === "Pristine") {
+    return "note";
+  }
+
   return "";
 }
 
 function getSizeClass(id) {
-  if (id === 5) return "note";
-  if (id === 4) return "illegitimate";
+  if (id === 5) {
+    return "note";
+  }
+
+  if (id === 4) {
+    return "illegitimate";
+  }
+
   return "";
 }
 
