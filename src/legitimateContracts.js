@@ -233,24 +233,26 @@ const investigationContract = [
 ];
 
 const weirdPayment = [
-  // TODO: Fill in weird payment option 1.
-  { text: "", rewardText: "" },
+  // TODO: Weird Payment Area
+  { text: "a favour from a person of power", rewardText: "a favour from a person of power", weight: 5 },
+  { text: "an uncommon magic item", rewardText: "an uncommon magic item", weight: 5 },
 
-  // TODO: Fill in weird payment option 2.
-  { text: "", rewardText: "" },
+  { text: "a piece of land", rewardText: " a piece of land", weight: 3 },
+  { text: "a rare magic item", rewardText: "a rare magic item", weight: 3 },
 
-  // TODO: Fill in weird payment option 3.
-  { text: "", rewardText: "" },
+  { text: "a custom-made weapon, armor piece, tool, or arcane focus", rewardText: "a custom-made weapon, armor piece, tool, or arcane focus", weight: 2 },
+  { text: "property in a nearby village, town or city", rewardText: "property in a nearby village, town or city", weight: 2  },
+  { text: "mayoralship of a village", rewardText: "mayoralship of a village", weight: 2 },
+  { text: "A blessing, oath, or supernatural protection", rewardText: "A blessing, oath, or supernatural protection", weight: 2 },
+  { text: "proficency training", rewardText: "proficency training", weight: 2 },
+  { text: "a very rare magic item", rewardText: "a very rare magic item", weight: 2 },
 
-  // TODO: Fill in weird payment option 4.
-  { text: "", rewardText: "" },
-
-  // TODO: Fill in weird payment option 5.
-  { text: "", rewardText: "" },
+  { text: "a village", rewardText: "village", weight: 1 },
+  { text: "a legendary magic item", rewardText: "a legendary magic item" },
 
   // TODO: Fill in Kurovian-only weird payment option.
   // This option is only visible/rollable when Kurovian Flavour is enabled.
-  { text: "KurovianOnly", rewardText: "Your test passes", kurovian: true }
+  { text: "crystallised Axius", rewardText: "crystallised Axius", kurovian: true, weight: 1 }
 ];
 
 const TAG_TABLES = {
