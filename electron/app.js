@@ -220,7 +220,7 @@ function renderSettings() {
         ${renderModeButton(
           "semiAutomatic",
           "Semi-automatic",
-          "Choose quality and size. Pick legitimate seeds; tags roll automatically."
+          "Choose quality and size. Pick contract seeds; tags roll automatically."
         )}
         ${renderModeButton(
           "automatic",
@@ -437,7 +437,7 @@ function renderStage() {
     const availableEntries = getAvailableTagEntries(tagKey);
 
     renderChoiceStage({
-      title: appState.data.tagLabels[tagKey] ?? tagKey,
+      title: getTagLabel(tagKey),
       copy: appState.settings.kurovianFlavour
         ? "Kurovian Flavour is enabled. Kurovian-only options are available."
         : "Kurovian-only options are hidden.",
@@ -460,6 +460,80 @@ function renderStage() {
       title: "Additional Weird Payment",
       copy: "This contract includes normal GP and an additional weird payment.",
       action: "choose-additional-weird-payment",
+      items: availableEntries.map((entry, index) => ({
+        label: getTagMenuText("weirdPayment", entry, index),
+        description: getTagDescription("weirdPayment", entry),
+        value: index,
+        kurovian: entry.kurovian === true,
+        colourClass: "kurovian"
+      }))
+    });
+    return;
+  }
+
+  if (appState.stage === "illegitimateSeed") {
+    renderChoiceStage({
+      title: "Illegitimate Contract Seed",
+      copy: appState.settings.mode === "semiAutomatic"
+        ? "Semi-automatic mode: choose the seed. Tags will be rolled automatically."
+        : "Manual mode: choose the seed, then choose the base and tags.",
+      action: "choose-illegit-seed",
+      items: appState.data.illegitimateSeeds.map((seed) => ({
+        label: seed.name,
+        description: seed.formulaText,
+        value: seed.id,
+        colourClass: "illegitimate"
+      }))
+    });
+    return;
+  }
+
+  if (appState.stage === "illegitimateBase") {
+    const pending = appState.board.pendingIllegitimate;
+
+    renderChoiceStage({
+      title: "Illegitimate Contract Base",
+      copy: "Choose which existing contract table this illegitimate contract pretends to be.",
+      action: "choose-illegit-base",
+      items: pending.seed.contractTagOptions.map((tagKey) => ({
+        label: getTagLabel(tagKey),
+        description: "This decides which existing contract table is used.",
+        value: tagKey,
+        colourClass: "illegitimate"
+      }))
+    });
+    return;
+  }
+
+  if (appState.stage === "illegitimateTag") {
+    const pending = appState.board.pendingIllegitimate;
+    const tagKey = pending.tagKeys[pending.tagIndex];
+    const availableEntries = getAvailableTagEntries(tagKey);
+
+    renderChoiceStage({
+      title: getTagLabel(tagKey),
+      copy: appState.settings.kurovianFlavour
+        ? "Kurovian Flavour is enabled. Kurovian-only options are available."
+        : "Kurovian-only options are hidden.",
+      action: "choose-illegit-tag",
+      items: availableEntries.map((entry, index) => ({
+        label: getTagMenuText(tagKey, entry, index),
+        description: getTagDescription(tagKey, entry),
+        value: index,
+        kurovian: entry.kurovian === true,
+        colourClass: entry.kurovian === true ? "kurovian" : "illegitimate"
+      }))
+    });
+    return;
+  }
+
+  if (appState.stage === "illegitimateAdditionalWeirdPayment") {
+    const availableEntries = getAvailableTagEntries("weirdPayment");
+
+    renderChoiceStage({
+      title: "Additional Weird Payment",
+      copy: "This contract includes normal GP and an additional weird payment.",
+      action: "choose-illegit-additional-weird-payment",
       items: availableEntries.map((entry, index) => ({
         label: getTagMenuText("weirdPayment", entry, index),
         description: getTagDescription("weirdPayment", entry),
@@ -578,12 +652,13 @@ function renderNoticeCard(notice) {
         <span class="notice-type ${getNoticeTypeClass(notice.outcome)}">${escapeHtml(formatNoticeOutcome(notice.outcome))}</span>
       </div>
 
-      ${notice.legitimateContract ? renderLegitimateContract(notice.legitimateContract) : ""}
+      ${notice.legitimateContract ? renderGeneratedContract(notice.legitimateContract) : ""}
+      ${notice.illegitimateContract ? renderGeneratedContract(notice.illegitimateContract) : ""}
     </div>
   `;
 }
 
-function renderLegitimateContract(contract) {
+function renderGeneratedContract(contract) {
   return `
     <p class="notice-text">${escapeHtml(contract.sentence)}</p>
     <div class="reward">Reward: ${escapeHtml(contract.rewardText)}</div>
@@ -664,6 +739,26 @@ function handleChoice(action, index) {
     chooseAdditionalWeirdPayment(item.value);
     return;
   }
+
+  if (action === "choose-illegit-seed") {
+    chooseIllegitimateSeedById(item.value);
+    return;
+  }
+
+  if (action === "choose-illegit-base") {
+    chooseIllegitimateBase(item.value);
+    return;
+  }
+
+  if (action === "choose-illegit-tag") {
+    chooseIllegitimateTag(item.value);
+    return;
+  }
+
+  if (action === "choose-illegit-additional-weird-payment") {
+    chooseIllegitimateAdditionalWeirdPayment(item.value);
+    return;
+  }
 }
 
 function chooseQuality(qualityId) {
@@ -708,22 +803,34 @@ function chooseNoticeKind(kind) {
 }
 
 function chooseContractType(contractType) {
-  if (contractType !== "Legitimate") {
-    appState.board.notices.push({
+  if (contractType === "Legitimate") {
+    appState.board.pendingNotice = {
       number: appState.board.currentNoticeNumber,
-      outcome: contractType
-    });
-    advanceManualNotice();
+      outcome: "Legitimate"
+    };
+
+    appState.stage = "legitimateSeed";
+    render();
     return;
   }
 
-  appState.board.pendingNotice = {
-    number: appState.board.currentNoticeNumber,
-    outcome: "Legitimate"
-  };
+  if (contractType === "Illegitimate") {
+    appState.board.pendingNotice = {
+      number: appState.board.currentNoticeNumber,
+      outcome: "Illegitimate"
+    };
 
-  appState.stage = "legitimateSeed";
-  render();
+    appState.stage = "illegitimateSeed";
+    render();
+    return;
+  }
+
+  appState.board.notices.push({
+    number: appState.board.currentNoticeNumber,
+    outcome: contractType
+  });
+
+  advanceManualNotice();
 }
 
 function chooseLegitimateSeedById(seedId) {
@@ -734,7 +841,7 @@ function chooseLegitimateSeedById(seedId) {
   }
 
   if (appState.settings.mode === "semiAutomatic") {
-    const tags = chooseTagsAutomaticallyForSeed(seed);
+    const tags = chooseLegitimateTagsAutomaticallyForSeed(seed);
 
     appState.board.notices.push({
       ...appState.board.pendingNotice,
@@ -765,7 +872,6 @@ function chooseLegitimateTag(availableEntryIndex) {
   const selectedEntry = availableEntries[availableEntryIndex];
 
   pending.tags[tagKey] = selectedEntry;
-
   applyForcedTagsToSelection(pending.tags, selectedEntry);
 
   pending.tagIndex += 1;
@@ -812,10 +918,121 @@ function finalizePendingLegitimateContract() {
   advanceManualNotice();
 }
 
+function chooseIllegitimateSeedById(seedId) {
+  const seed = appState.data.illegitimateSeeds.find((entry) => entry.id === seedId);
+
+  if (seed === undefined) {
+    return;
+  }
+
+  if (appState.settings.mode === "semiAutomatic") {
+    const result = chooseIllegitimateTagsAutomaticallyForSeed(seed);
+
+    appState.board.notices.push({
+      ...appState.board.pendingNotice,
+      illegitimateContract: buildIllegitimateContract(seed, result.contractTagKey, result.tags)
+    });
+
+    appState.board.pendingNotice = null;
+    appState.board.currentNoticeNumber += 1;
+
+    runSemiAutomaticUntilChoiceNeeded();
+    return;
+  }
+
+  appState.board.pendingIllegitimate = {
+    seed,
+    contractTagKey: null,
+    tagKeys: [],
+    tagIndex: 0,
+    tags: {}
+  };
+
+  appState.stage = "illegitimateBase";
+  render();
+}
+
+function chooseIllegitimateBase(contractTagKey) {
+  const pending = appState.board.pendingIllegitimate;
+
+  pending.contractTagKey = contractTagKey;
+  pending.tagKeys = [contractTagKey, pending.seed.extraTagKey];
+  pending.tagIndex = 0;
+
+  appState.stage = "illegitimateTag";
+  render();
+}
+
+function chooseIllegitimateTag(availableEntryIndex) {
+  const pending = appState.board.pendingIllegitimate;
+  const tagKey = pending.tagKeys[pending.tagIndex];
+  const availableEntries = getAvailableTagEntries(tagKey);
+  const selectedEntry = availableEntries[availableEntryIndex];
+
+  pending.tags[tagKey] = selectedEntry;
+  applyForcedTagsToSelection(pending.tags, selectedEntry);
+
+  pending.tagIndex += 1;
+  advancePendingIllegitimateTagIndex(pending);
+
+  if (pending.tagIndex < pending.tagKeys.length) {
+    appState.stage = "illegitimateTag";
+    render();
+    return;
+  }
+
+  if (
+    shouldAddAdditionalWeirdPayment(pending.seed, pending.tags) &&
+    pending.tags.weirdPayment === undefined
+  ) {
+    appState.stage = "illegitimateAdditionalWeirdPayment";
+    render();
+    return;
+  }
+
+  finalizePendingIllegitimateContract();
+}
+
+function chooseIllegitimateAdditionalWeirdPayment(availableEntryIndex) {
+  const pending = appState.board.pendingIllegitimate;
+  const availableEntries = getAvailableTagEntries("weirdPayment");
+
+  pending.tags.weirdPayment = availableEntries[availableEntryIndex];
+
+  finalizePendingIllegitimateContract();
+}
+
+function finalizePendingIllegitimateContract() {
+  const pending = appState.board.pendingIllegitimate;
+
+  appState.board.notices.push({
+    ...appState.board.pendingNotice,
+    illegitimateContract: buildIllegitimateContract(
+      pending.seed,
+      pending.contractTagKey,
+      pending.tags
+    )
+  });
+
+  appState.board.pendingNotice = null;
+  appState.board.pendingIllegitimate = null;
+
+  advanceManualNotice();
+}
+
 function advancePendingLegitimateTagIndex(pending) {
   while (
     pending.tagIndex < pending.seed.tagKeys.length &&
     pending.tags[pending.seed.tagKeys[pending.tagIndex]] !== undefined
+  ) {
+    pending.tagIndex += 1;
+  }
+}
+
+function advancePendingIllegitimateTagIndex(pending) {
+  while (
+    pending.tagIndex < pending.tagKeys.length &&
+    pending.tags[pending.tagKeys[pending.tagIndex]] !== undefined
   ) {
     pending.tagIndex += 1;
   }
@@ -843,16 +1060,22 @@ function runSemiAutomaticUntilChoiceNeeded() {
 
     const contractType = rollOnPercentTable(appState.board.quality.contractTypeTable, rollDie(100));
 
-    if (contractType !== "Legitimate") {
-      appState.board.notices.push({ number, outcome: contractType });
-      appState.board.currentNoticeNumber += 1;
-      continue;
+    if (contractType === "Legitimate") {
+      appState.board.pendingNotice = { number, outcome: "Legitimate" };
+      appState.stage = "legitimateSeed";
+      render();
+      return;
     }
 
-    appState.board.pendingNotice = { number, outcome: "Legitimate" };
-    appState.stage = "legitimateSeed";
-    render();
-    return;
+    if (contractType === "Illegitimate") {
+      appState.board.pendingNotice = { number, outcome: "Illegitimate" };
+      appState.stage = "illegitimateSeed";
+      render();
+      return;
+    }
+
+    appState.board.notices.push({ number, outcome: contractType });
+    appState.board.currentNoticeNumber += 1;
   }
 
   appState.stage = "result";
@@ -876,18 +1099,29 @@ function generateAutomaticNotice(number) {
 
   const contractType = rollOnPercentTable(appState.board.quality.contractTypeTable, rollDie(100));
 
-  if (contractType !== "Legitimate") {
-    return { number, outcome: contractType };
+  if (contractType === "Legitimate") {
+    const seed = rollLegitimateSeed();
+    const tags = chooseLegitimateTagsAutomaticallyForSeed(seed);
+
+    return {
+      number,
+      outcome: "Legitimate",
+      legitimateContract: buildLegitimateContract(seed, tags)
+    };
   }
 
-  const seed = rollLegitimateSeed();
-  const tags = chooseTagsAutomaticallyForSeed(seed);
+  if (contractType === "Illegitimate") {
+    const seed = rollIllegitimateSeed();
+    const result = chooseIllegitimateTagsAutomaticallyForSeed(seed);
 
-  return {
-    number,
-    outcome: "Legitimate",
-    legitimateContract: buildLegitimateContract(seed, tags)
-  };
+    return {
+      number,
+      outcome: "Illegitimate",
+      illegitimateContract: buildIllegitimateContract(seed, result.contractTagKey, result.tags)
+    };
+  }
+
+  return { number, outcome: contractType };
 }
 
 function rollLegitimateSeed() {
@@ -907,7 +1141,24 @@ function rollLegitimateSeed() {
   return appState.data.legitimateSeeds[appState.data.legitimateSeeds.length - 1];
 }
 
-function chooseTagsAutomaticallyForSeed(seed) {
+function rollIllegitimateSeed() {
+  const roll = rollDie(100);
+  let minimum = 1;
+
+  for (const seed of appState.data.illegitimateSeeds) {
+    const maximum = minimum + seed.percent - 1;
+
+    if (roll >= minimum && roll <= maximum) {
+      return seed;
+    }
+
+    minimum = maximum + 1;
+  }
+
+  return appState.data.illegitimateSeeds[appState.data.illegitimateSeeds.length - 1];
+}
+
+function chooseLegitimateTagsAutomaticallyForSeed(seed) {
   const tags = {};
 
   for (const tagKey of seed.tagKeys) {
@@ -916,7 +1167,6 @@ function chooseTagsAutomaticallyForSeed(seed) {
     }
 
     const selectedEntry = chooseTagAutomatically(tagKey);
-
     tags[tagKey] = selectedEntry;
 
     applyForcedTagsToSelection(tags, selectedEntry);
@@ -932,6 +1182,35 @@ function chooseTagsAutomaticallyForSeed(seed) {
   return tags;
 }
 
+function chooseIllegitimateTagsAutomaticallyForSeed(seed) {
+  const tags = {};
+  const contractTagKey = seed.contractTagOptions[rollDie(seed.contractTagOptions.length) - 1];
+  const tagKeys = [contractTagKey, seed.extraTagKey];
+
+  for (const tagKey of tagKeys) {
+    if (tags[tagKey] !== undefined) {
+      continue;
+    }
+
+    const selectedEntry = chooseTagAutomatically(tagKey);
+    tags[tagKey] = selectedEntry;
+
+    applyForcedTagsToSelection(tags, selectedEntry);
+  }
+
+  if (
+    shouldAddAdditionalWeirdPayment(seed, tags) &&
+    tags.weirdPayment === undefined
+  ) {
+    tags.weirdPayment = chooseTagAutomatically("weirdPayment");
+  }
+
+  return {
+    contractTagKey,
+    tags
+  };
+}
+
 function chooseTagAutomatically(tagKey) {
   const availableEntries = getAvailableTagEntries(tagKey);
   const filledEntries = availableEntries.filter((entry) => isFilledEntry(entry));
@@ -941,19 +1220,37 @@ function chooseTagAutomatically(tagKey) {
 }
 
 function buildLegitimateContract(seed, tags) {
-  const reward = calculateReward(seed, tags);
+  const reward = calculateRewardFromContractTag(
+    seed,
+    tags,
+    seed.tagKeys.find((tagKey) => tagKey.toLowerCase().includes("contract"))
+  );
 
   return {
     seedName: seed.name,
     kurovianFlavour: appState.settings.kurovianFlavour,
-    sentence: buildContractSentence(seed, tags),
+    sentence: buildLegitimateSentence(seed, tags),
     rewardText: reward.rewardText,
     rewardDetails: reward.details,
     tags
   };
 }
 
-function buildContractSentence(seed, tags) {
+function buildIllegitimateContract(seed, contractTagKey, tags) {
+  const reward = calculateRewardFromContractTag(seed, tags, contractTagKey);
+
+  return {
+    seedName: seed.name,
+    kurovianFlavour: appState.settings.kurovianFlavour,
+    contractTagKey,
+    sentence: buildIllegitimateSentence(seed, contractTagKey, tags),
+    rewardText: reward.rewardText,
+    rewardDetails: reward.details,
+    tags
+  };
+}
+
+function buildLegitimateSentence(seed, tags) {
   if (seed.name === "Legitimate Simple") {
     return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.contract, "contract")}.`;
   }
@@ -985,17 +1282,31 @@ function buildContractSentence(seed, tags) {
   return "A legitimate contract has been posted.";
 }
 
-function calculateReward(seed, tags) {
+function buildIllegitimateSentence(seed, contractTagKey, tags) {
+  const subject = tags.employer === undefined
+    ? "A notice"
+    : asSubject(tags.employer, "employer");
+
+  const contractText = asAction(tags[contractTagKey], getTagLabel(contractTagKey));
+
+  if (seed.name === "Illegitimate False Premise") {
+    return `${subject} asks for people to ${contractText}, but the real purpose is ${asAction(tags.realPurpose, "real purpose")}.`;
+  }
+
+  if (seed.name === "Illegitimate Betrayal") {
+    return `${subject} asks for people to ${contractText}, but ${asAction(tags.betrayal, "betrayal")}.`;
+  }
+
+  return `${subject} posts an illegitimate contract.`;
+}
+
+function calculateRewardFromContractTag(seed, tags, contractTagKey) {
   if (seed.rewardOverrideTag !== undefined) {
     return {
       rewardText: getWeirdPaymentText(tags[seed.rewardOverrideTag]),
       details: { overriddenBy: seed.rewardOverrideTag }
     };
   }
-
-  const contractTagKey = seed.tagKeys.find((tagKey) =>
-    tagKey.toLowerCase().includes("contract")
-  );
 
   if (contractTagKey === undefined) {
     return {
@@ -1004,7 +1315,7 @@ function calculateReward(seed, tags) {
     };
   }
 
-  const baseRewardGp = Number(tags[contractTagKey].baseRewardGp);
+  const baseRewardGp = Number(tags[contractTagKey]?.baseRewardGp);
 
   if (!Number.isFinite(baseRewardGp) || baseRewardGp <= 0) {
     return {
@@ -1013,10 +1324,10 @@ function calculateReward(seed, tags) {
     };
   }
 
-  const totalTagModifierPercent = seed.tagKeys
-    .filter((tagKey) => tagKey !== contractTagKey)
-    .reduce((sum, tagKey) => {
-      return sum + getRewardModifier(tags[tagKey]);
+  const totalTagModifierPercent = Object.entries(tags)
+    .filter(([tagKey]) => tagKey !== contractTagKey && tagKey !== "weirdPayment")
+    .reduce((sum, [_tagKey, entry]) => {
+      return sum + getRewardModifier(entry);
     }, 0);
 
   const driftPercent = getRandomRewardDriftPercent();
@@ -1100,7 +1411,7 @@ function getWeirdPaymentText(entry) {
 }
 
 function getAvailableTagEntries(tagKey) {
-  const table = appState.data.tagTables[tagKey] ?? [];
+  const table = getTagTable(tagKey);
 
   return table.filter((entry) => {
     if (entry.kurovian === true) {
@@ -1109,6 +1420,22 @@ function getAvailableTagEntries(tagKey) {
 
     return true;
   });
+}
+
+function getTagTable(tagKey) {
+  return (
+    appState.data.tagTables[tagKey] ??
+    appState.data.illegitimateTagTables[tagKey] ??
+    []
+  );
+}
+
+function getTagLabel(tagKey) {
+  return (
+    appState.data.tagLabels[tagKey] ??
+    appState.data.illegitimateTagLabels[tagKey] ??
+    tagKey
+  );
 }
 
 function getTagMenuText(tagKey, entry, index) {
@@ -1123,7 +1450,7 @@ function getTagMenuText(tagKey, entry, index) {
     return rewardText;
   }
 
-  return `[empty ${(appState.data.tagLabels[tagKey] ?? tagKey)} option ${index + 1}]`;
+  return `[empty ${getTagLabel(tagKey)} option ${index + 1}]`;
 }
 
 function getTagDescription(tagKey, entry) {
@@ -1220,7 +1547,7 @@ function findForcedTagEntry(tagKey, forcedText) {
   });
 
   if (result === undefined) {
-    throw new Error(`Forced tag "${forcedText}" was not found in ${appState.data.tagLabels[tagKey] ?? tagKey}.`);
+    throw new Error(`Forced tag "${forcedText}" was not found in ${getTagLabel(tagKey)}.`);
   }
 
   return result;
@@ -1233,13 +1560,13 @@ function normaliseTagText(value) {
 function getForcedTagsText(forcedTags) {
   return Object.entries(forcedTags)
     .map(([tagKey, forcedText]) => {
-      return `forces ${appState.data.tagLabels[tagKey] ?? tagKey}: ${forcedText}`;
+      return `forces ${getTagLabel(tagKey)}: ${forcedText}`;
     })
     .join("; ");
 }
 
 function calculateAvailableContractCount() {
-  return appState.data.legitimateSeeds.reduce((total, seed) => {
+  const legitimateCount = appState.data.legitimateSeeds.reduce((total, seed) => {
     let combinations = 1;
 
     for (const tagKey of seed.tagKeys) {
@@ -1254,6 +1581,22 @@ function calculateAvailableContractCount() {
 
     return total + combinations;
   }, 0);
+
+  const illegitimateCount = appState.data.illegitimateSeeds.reduce((total, seed) => {
+    const baseCount = seed.contractTagOptions.reduce((sum, tagKey) => {
+      return sum + getFilledTagEntryCount(tagKey);
+    }, 0);
+
+    const extraCount = getFilledTagEntryCount(seed.extraTagKey);
+
+    if (baseCount <= 0 || extraCount <= 0) {
+      return total;
+    }
+
+    return total + baseCount * extraCount;
+  }, 0);
+
+  return legitimateCount + illegitimateCount;
 }
 
 function getFilledTagEntryCount(tagKey) {
@@ -1338,7 +1681,8 @@ function newBoard() {
     currentNoticeNumber: 1,
     notices: [],
     pendingNotice: null,
-    pendingLegitimate: null
+    pendingLegitimate: null,
+    pendingIllegitimate: null
   };
 }
 

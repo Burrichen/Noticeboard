@@ -2,6 +2,7 @@ const { chooseFromList } = require("./input");
 const { QUALITY_TABLE, SIZE_TABLE } = require("./tables");
 const style = require("./style");
 const { generateLegitimateContract, validateLegitimateTables } = require("./legitimateContracts");
+const { generateIllegitimateContract, validateIllegitimateTables } = require("./illegitimateContracts");
 const {
   formatDiceFormula,
   getDiceMaximum,
@@ -19,6 +20,7 @@ function validateTables() {
   }
 
   validateLegitimateTables();
+  validateIllegitimateTables();
 }
 
 async function generateNoticeboard(mode, options = {}) {
@@ -178,9 +180,15 @@ async function generateNoticeAutomatically(number, quality, size, mode, options)
 
   const contractTypeRoll = rollDie(100);
   const contractType = rollOnPercentTable(quality.contractTypeTable, contractTypeRoll);
+
   const legitimateContract =
     contractType === "Legitimate"
       ? await generateLegitimateContract(mode, options)
+      : undefined;
+
+  const illegitimateContract =
+    contractType === "Illegitimate"
+      ? await generateIllegitimateContract(mode, options)
       : undefined;
 
   return {
@@ -188,7 +196,8 @@ async function generateNoticeAutomatically(number, quality, size, mode, options)
     outcome: contractType,
     noteRoll: `d100 = ${noteRoll}`,
     contractTypeRoll: `d100 = ${contractTypeRoll}`,
-    legitimateContract
+    legitimateContract,
+    illegitimateContract
   };
 }
 
@@ -204,9 +213,15 @@ async function generateNoticeManually(number, quality, size, mode, options) {
   }
 
   const contractChoice = await chooseContractType(number);
+
   const legitimateContract =
     contractChoice.contractType === "Legitimate"
       ? await generateLegitimateContract(mode, options)
+      : undefined;
+
+  const illegitimateContract =
+    contractChoice.contractType === "Illegitimate"
+      ? await generateIllegitimateContract(mode, options)
       : undefined;
 
   return {
@@ -214,7 +229,8 @@ async function generateNoticeManually(number, quality, size, mode, options) {
     outcome: contractChoice.contractType,
     noteRoll: noteChoice.rollText,
     contractTypeRoll: contractChoice.rollText,
-    legitimateContract
+    legitimateContract,
+    illegitimateContract
   };
 }
 

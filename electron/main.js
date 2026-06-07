@@ -22,6 +22,7 @@ function createWindow() {
 app.whenReady().then(() => {
   ipcMain.handle("noticeboard:get-data", () => getGeneratorData());
   ipcMain.handle("noticeboard:get-settings", () => getSettings());
+
   ipcMain.handle("noticeboard:save-settings", (_event, settings) => {
     saveSettingsFromRenderer(settings);
     return getSettings();
@@ -44,6 +45,7 @@ app.on("window-all-closed", () => {
 
 function getGeneratorData() {
   const { QUALITY_TABLE, SIZE_TABLE } = freshRequire("../src/tables");
+
   const {
     LEGITIMATE_SEEDS,
     TAG_TABLES,
@@ -51,13 +53,24 @@ function getGeneratorData() {
     REWARD_DRIFT_RANGE_PERCENT
   } = freshRequire("../src/legitimateContracts");
 
+  const {
+    ILLEGITIMATE_SEEDS,
+    ILLEGITIMATE_TAG_TABLES,
+    ILLEGITIMATE_TAG_LABELS
+  } = freshRequire("../src/illegitimateContracts");
+
   return {
     qualityTable: QUALITY_TABLE,
     sizeTable: SIZE_TABLE,
+
     legitimateSeeds: LEGITIMATE_SEEDS,
     tagTables: TAG_TABLES,
     tagLabels: TAG_LABELS,
-    rewardDriftRangePercent: REWARD_DRIFT_RANGE_PERCENT
+    rewardDriftRangePercent: REWARD_DRIFT_RANGE_PERCENT,
+
+    illegitimateSeeds: ILLEGITIMATE_SEEDS,
+    illegitimateTagTables: ILLEGITIMATE_TAG_TABLES,
+    illegitimateTagLabels: ILLEGITIMATE_TAG_LABELS
   };
 }
 

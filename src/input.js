@@ -1,11 +1,12 @@
-const readline = require("readline/promises");
+const readlinePromises = require("readline/promises");
+const readline = require("readline");
 const { stdin: input, stdout: output } = require("process");
 const style = require("./style");
 
 async function ask(question) {
   disableRawMode();
 
-  const rl = readline.createInterface({ input, output });
+  const rl = readlinePromises.createInterface({ input, output });
   const answer = await rl.question(style.prompt(question));
   rl.close();
 
@@ -38,16 +39,20 @@ async function chooseFromList(config) {
   let selectedIndex = 0;
   let typedNumber = "";
   let errorMessage = "";
+  let previousLineCount = 0;
+
+  clearTerminal();
 
   while (true) {
-    renderChoiceList({
+    previousLineCount = renderChoiceList({
       title,
       statusLines,
       prompt,
       items,
       selectedIndex,
       typedNumber,
-      errorMessage
+      errorMessage,
+      previousLineCount
     });
 
     const rawKey = await readKey();
@@ -128,9 +133,6 @@ async function chooseFromList(config) {
   }
 }
 
-// Compatibility wrapper.
-// Older files may still call askSingleKeyNumber. This keeps them working,
-// but internally uses the new list picker.
 async function askSingleKeyNumber(question, minimum, maximum) {
   const items = [];
 
@@ -150,9 +152,6 @@ async function askSingleKeyNumber(question, minimum, maximum) {
   return minimum + selectedIndex - 1;
 }
 
-// Compatibility wrapper.
-// Older files may still call askSingleKeyChoice. This keeps them working,
-// but internally uses the new list picker.
 async function askSingleKeyChoice(question, allowedKeys) {
   const items = allowedKeys.map((key) => {
     return {
@@ -171,20 +170,20 @@ async function askSingleKeyChoice(question, allowedKeys) {
 }
 
 function renderChoiceList(config) {
-  console.clear();
+  const lines = [];
 
-  console.log(style.line());
-  console.log(style.title(` ${config.title}`));
-  console.log(style.line());
+  lines.push(style.line());
+  lines.push(style.title(` ${config.title}`));
+  lines.push(style.line());
 
   if (config.statusLines.length > 0) {
     for (const line of config.statusLines) {
-      console.log(line);
+      lines.push(line);
     }
 
-    console.log("");
+    lines.push("");
   } else {
-    console.log("");
+    lines.push("");
   }
 
   for (let index = 0; index < config.items.length; index += 1) {
@@ -199,35 +198,53 @@ function renderChoiceList(config) {
       ? style.selectedOptionName(item.label, colour)
       : style.optionName(item.label, colour);
 
-    console.log(`${arrow} ${number} ${label}`);
+    lines.push(`${arrow} ${number} ${label}`);
 
     if (item.description !== undefined && item.description !== "") {
       const description = isSelected
         ? style.selectedSubtitle(`   ${item.description}`)
         : `   ${style.subtitle(item.description)}`;
 
-      console.log(`  ${description}`);
+      lines.push(`  ${description}`);
     }
   }
 
-  console.log("");
+  lines.push("");
 
   const instruction =
     config.items.length <= 9
       ? "press a number, or use ↑/↓ then Enter"
       : "type a number then Enter, or use ↑/↓ then Enter";
 
-  console.log(style.prompt(`${config.prompt} `) + style.dim(`(${instruction})`));
+  lines.push(style.prompt(`${config.prompt} `) + style.dim(`(${instruction})`));
 
   if (config.typedNumber !== "") {
-    console.log(
+    lines.push(
       `${style.dim("Typed:")} ${style.optionName(config.typedNumber, style.colours.tarnishedGold)}`
     );
   }
 
   if (config.errorMessage !== "") {
-    console.log(style.error(config.errorMessage));
+    lines.push(style.error(config.errorMessage));
   }
+
+  redrawInPlace(lines, config.previousLineCount);
+
+  return lines.length;
+}
+
+function redrawInPlace(lines, previousLineCount) {
+  if (previousLineCount > 0) {
+    readline.moveCursor(output, 0, -previousLineCount);
+    readline.clearScreenDown(output);
+  }
+
+  output.write(`${lines.join("\n")}\n`);
+}
+
+function clearTerminal() {
+  readline.cursorTo(output, 0, 0);
+  readline.clearScreenDown(output);
 }
 
 function readKey() {
@@ -237,9 +254,6 @@ function readKey() {
     function cleanup() {
       input.off("data", onData);
       disableRawMode();
-
-      // Do not call input.pause() here.
-      // Pausing stdin can make the next normal prompt fail or make Node exit early.
     }
 
     function onData(buffer) {
@@ -345,11 +359,8 @@ module.exports = {
   ask,
   askNumber,
   chooseFromList,
-
-  // Compatibility exports.
   askSingleKeyNumber,
   askSingleKeyChoice,
-
   pause,
   closeInput,
   parseWholeNumber,

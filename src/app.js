@@ -145,14 +145,18 @@ function printNoticeboardResult(result) {
     console.log(`${style.menuNumber(notice.number)} ${style.contractType(notice.outcome)}`);
 
     if (notice.legitimateContract !== undefined) {
-      printLegitimateContract(notice.legitimateContract);
+      printGeneratedContract(notice.legitimateContract);
+    }
+
+    if (notice.illegitimateContract !== undefined) {
+      printGeneratedContract(notice.illegitimateContract);
     }
   }
 
   console.log("");
 }
 
-function printLegitimateContract(contract) {
+function printGeneratedContract(contract) {
   console.log(`   ${style.subtitle(contract.sentence)}`);
   console.log(
     `   ${style.optionName("Reward:", style.colours.tarnishedGold)} ${style.optionName(contract.rewardText, style.colours.oldBone)}`
@@ -177,7 +181,7 @@ function getGenerationModeDescription(mode) {
   }
 
   if (mode === "semiAutomatic") {
-    return "Choose quality and size. Pick legitimate seeds; tags roll automatically.";
+    return "Choose quality and size. Pick contract seeds; tags roll automatically.";
   }
 
   return "Everything rolls immediately.";
