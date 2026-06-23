@@ -1,6 +1,10 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 
+// Settings module reads JSON fresh on every loadSettings() call,
+// so it only needs to be required once.
+const { loadSettings, saveSettings } = require("../src/settings");
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1500,
@@ -21,11 +25,22 @@ function createWindow() {
 
 app.whenReady().then(() => {
   ipcMain.handle("noticeboard:get-data", () => getGeneratorData());
-  ipcMain.handle("noticeboard:get-settings", () => getSettings());
+  ipcMain.handle("noticeboard:reload-data", () => getGeneratorDataFresh());
+  ipcMain.handle("noticeboard:get-settings", () => loadSettings());
 
   ipcMain.handle("noticeboard:save-settings", (_event, settings) => {
-    saveSettingsFromRenderer(settings);
-    return getSettings();
+    saveSettings(settings);
+    return loadSettings();
+  });
+
+  ipcMain.handle("noticeboard:build-legitimate", (_event, { seed, tags, kurovianFlavour }) => {
+    const { buildContractFromTags } = require("../src/legitimateContracts");
+    return buildContractFromTags(seed, tags, kurovianFlavour);
+  });
+
+  ipcMain.handle("noticeboard:build-illegitimate", (_event, { seed, contractTagKey, tags, kurovianFlavour }) => {
+    const { buildIllegitimateContractFromTags } = require("../src/illegitimateContracts");
+    return buildIllegitimateContractFromTags(seed, contractTagKey, tags, kurovianFlavour);
   });
 
   createWindow();
@@ -44,6 +59,37 @@ app.on("window-all-closed", () => {
 });
 
 function getGeneratorData() {
+  const { QUALITY_TABLE, SIZE_TABLE } = require("../src/tables");
+
+  const {
+    LEGITIMATE_SEEDS,
+    TAG_TABLES,
+    TAG_LABELS,
+    REWARD_DRIFT_RANGE_PERCENT
+  } = require("../src/legitimateContracts");
+
+  const {
+    ILLEGITIMATE_SEEDS,
+    ILLEGITIMATE_TAG_TABLES,
+    ILLEGITIMATE_TAG_LABELS
+  } = require("../src/illegitimateContracts");
+
+  return {
+    qualityTable: QUALITY_TABLE,
+    sizeTable: SIZE_TABLE,
+    legitimateSeeds: LEGITIMATE_SEEDS,
+    tagTables: TAG_TABLES,
+    tagLabels: TAG_LABELS,
+    rewardDriftRangePercent: REWARD_DRIFT_RANGE_PERCENT,
+    illegitimateSeeds: ILLEGITIMATE_SEEDS,
+    illegitimateTagTables: ILLEGITIMATE_TAG_TABLES,
+    illegitimateTagLabels: ILLEGITIMATE_TAG_LABELS
+  };
+}
+
+// Used by the "Reload JS Table Data" button to pick up edits to table files
+// without restarting the app.
+function getGeneratorDataFresh() {
   const { QUALITY_TABLE, SIZE_TABLE } = freshRequire("../src/tables");
 
   const {
@@ -62,26 +108,14 @@ function getGeneratorData() {
   return {
     qualityTable: QUALITY_TABLE,
     sizeTable: SIZE_TABLE,
-
     legitimateSeeds: LEGITIMATE_SEEDS,
     tagTables: TAG_TABLES,
     tagLabels: TAG_LABELS,
     rewardDriftRangePercent: REWARD_DRIFT_RANGE_PERCENT,
-
     illegitimateSeeds: ILLEGITIMATE_SEEDS,
     illegitimateTagTables: ILLEGITIMATE_TAG_TABLES,
     illegitimateTagLabels: ILLEGITIMATE_TAG_LABELS
   };
-}
-
-function getSettings() {
-  const { loadSettings } = freshRequire("../src/settings");
-  return loadSettings();
-}
-
-function saveSettingsFromRenderer(settings) {
-  const { saveSettings } = freshRequire("../src/settings");
-  saveSettings(settings);
 }
 
 function freshRequire(modulePath) {

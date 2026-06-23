@@ -1,6 +1,19 @@
 const { chooseFromList } = require("./input");
 const { rollDie } = require("./dice");
 const style = require("./style");
+const {
+  isKurovianEntry,
+  chooseWeightedEntry,
+  isFilledEntry,
+  getCleanText,
+  normaliseTagText,
+  asSubject,
+  asAction,
+  getWeirdPaymentText,
+  getRewardModifier,
+  shouldAddAdditionalWeirdPayment,
+  getForcedTagsText
+} = require("./tagUtils");
 
 const {
   TAG_TABLES: LEGITIMATE_TAG_TABLES,
@@ -121,18 +134,7 @@ async function generateIllegitimateContract(mode, options = {}) {
         : chooseTagAutomatically("weirdPayment", kurovianFlavour);
   }
 
-  const sentence = buildIllegitimateSentence(seed, contractTagKey, selectedTags);
-  const reward = calculateReward(seed, contractTagKey, selectedTags);
-
-  return {
-    seedName: seed.name,
-    kurovianFlavour,
-    contractTagKey,
-    sentence,
-    rewardText: reward.rewardText,
-    rewardDetails: reward.details,
-    tags: selectedTags
-  };
+  return buildIllegitimateContractFromTags(seed, contractTagKey, selectedTags, kurovianFlavour);
 }
 
 function validateIllegitimateTables() {
@@ -247,7 +249,6 @@ function getAvailableTagEntries(tagKey, kurovianFlavour) {
     if (isKurovianEntry(entry)) {
       return kurovianFlavour;
     }
-
     return true;
   });
 
@@ -278,65 +279,6 @@ function getTagLabel(tagKey) {
   );
 }
 
-function isKurovianEntry(entry) {
-  return entry.kurovian === true;
-}
-
-function isFilledEntry(entry) {
-  return (
-    getCleanText(entry.text) !== "" ||
-    getCleanText(entry.rewardText) !== "" ||
-    Number(entry.baseRewardGp) > 0
-  );
-}
-
-function chooseWeightedEntry(entries) {
-  const totalWeight = entries.reduce((sum, entry) => {
-    return sum + getEntryWeight(entry);
-  }, 0);
-
-  if (totalWeight <= 0) {
-    const chosenIndex = rollDie(entries.length) - 1;
-    return entries[chosenIndex];
-  }
-
-  let roll = rollDie(totalWeight);
-
-  for (const entry of entries) {
-    roll -= getEntryWeight(entry);
-
-    if (roll <= 0) {
-      return entry;
-    }
-  }
-
-  return entries[entries.length - 1];
-}
-
-function getEntryWeight(entry) {
-  const weight = Number(entry.weight);
-
-  if (!Number.isFinite(weight) || weight <= 0) {
-    return 1;
-  }
-
-  return Math.floor(weight);
-}
-
-function shouldAddAdditionalWeirdPayment(seed, selectedTags) {
-  if (seed.rewardOverrideTag !== undefined) {
-    return false;
-  }
-
-  if (selectedTags.weirdPayment !== undefined) {
-    return false;
-  }
-
-  return Object.values(selectedTags).some((entry) => {
-    return entry.additionalWeirdPayment === true;
-  });
-}
-
 function applyForcedTags(selectedTags, sourceEntry, kurovianFlavour) {
   if (sourceEntry.forcedTags === undefined) {
     return;
@@ -364,17 +306,13 @@ function findForcedTagEntry(tagKey, forcedText, kurovianFlavour) {
   return result;
 }
 
-function normaliseTagText(value) {
-  return String(value).trim().toLowerCase();
-}
-
 function getTagMenuText(tagKey, entry, index) {
   const text = getCleanText(entry.text);
   const rewardText = getCleanText(entry.rewardText);
   const markers = [];
 
   if (entry.weight !== undefined) {
-    markers.push(`weight ${getEntryWeight(entry)}`);
+    markers.push(`weight ${entry.weight}`);
   }
 
   if (isKurovianEntry(entry)) {
@@ -386,7 +324,7 @@ function getTagMenuText(tagKey, entry, index) {
   }
 
   if (entry.forcedTags !== undefined) {
-    markers.push(getForcedTagsText(entry.forcedTags));
+    markers.push(getForcedTagsText(entry.forcedTags, getTagLabel));
   }
 
   const markerText = markers.length > 0
@@ -402,14 +340,6 @@ function getTagMenuText(tagKey, entry, index) {
   }
 
   return `[empty ${getTagLabel(tagKey)} option ${index + 1}]${markerText}`;
-}
-
-function getForcedTagsText(forcedTags) {
-  return Object.entries(forcedTags)
-    .map(([tagKey, forcedText]) => {
-      return `forces ${getTagLabel(tagKey)}: ${forcedText}`;
-    })
-    .join("; ");
 }
 
 function buildIllegitimateSentence(seed, contractTagKey, tags) {
@@ -478,65 +408,6 @@ function calculateReward(seed, contractTagKey, tags) {
   };
 }
 
-function getRewardModifier(entry) {
-  const modifier = Number(entry.rewardModifierPercent);
-
-  if (!Number.isFinite(modifier)) {
-    return 0;
-  }
-
-  return modifier;
-}
-
-function getWeirdPaymentText(entry) {
-  const rewardText = getCleanText(entry.rewardText);
-  const text = getCleanText(entry.text);
-
-  if (rewardText !== "") {
-    return rewardText;
-  }
-
-  if (text !== "") {
-    return text;
-  }
-
-  return "[weird payment not filled]";
-}
-
-function asSubject(entry, fallbackName) {
-  return sentenceCase(getTagText(entry, fallbackName));
-}
-
-function asAction(entry, fallbackName) {
-  return getTagText(entry, fallbackName);
-}
-
-function getTagText(entry, fallbackName) {
-  const text = getCleanText(entry.text);
-
-  if (text !== "") {
-    return text;
-  }
-
-  return `[${fallbackName} not filled]`;
-}
-
-function getCleanText(value) {
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function sentenceCase(text) {
-  if (text.length === 0) {
-    return text;
-  }
-
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
 function getTagColour(tagKey, entry) {
   if (entry.additionalWeirdPayment === true) {
     return style.colours.cursedViolet;
@@ -561,9 +432,24 @@ function getTagColour(tagKey, entry) {
   return style.colours.graveAsh;
 }
 
+function buildIllegitimateContractFromTags(seed, contractTagKey, tags, kurovianFlavour) {
+  const reward = calculateReward(seed, contractTagKey, tags);
+
+  return {
+    seedName: seed.name,
+    kurovianFlavour: kurovianFlavour === true,
+    contractTagKey,
+    sentence: buildIllegitimateSentence(seed, contractTagKey, tags),
+    rewardText: reward.rewardText,
+    rewardDetails: reward.details,
+    tags
+  };
+}
+
 module.exports = {
   generateIllegitimateContract,
   validateIllegitimateTables,
+  buildIllegitimateContractFromTags,
 
   ILLEGITIMATE_SEEDS,
   ILLEGITIMATE_TAG_TABLES,
