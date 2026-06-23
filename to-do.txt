@@ -30,18 +30,9 @@ Weird Contract table
   Where: src/legitimateContracts.js, the `weirdContract` array
   Notes: Has one blank entry and one with baseRewardGp: 0. Fill these in or remove them.
 
-Social Contract table
-  Where: src/legitimateContracts.js, the `socialContract` array
-  Notes: "collect a debt without causing" appears to be cut off - finish the sentence.
-
 Investigation Contract table
   Where: src/legitimateContracts.js, the `investigationContract` array
   Notes: Looks mostly complete. Review weights and add more entries if needed.
-
-Weird Payment table
-  Where: src/legitimateContracts.js, the `weirdPayment` array
-  Notes: "a legendary magic item" entry is missing a weight. Add weight or leave as 1.
-         Kurovian-only entry (crystallised Axius) needs its description expanded.
 
 
 CONTENT - TAG TABLES (src/illegitimateContracts.js)

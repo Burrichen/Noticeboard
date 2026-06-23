@@ -163,8 +163,8 @@ const employer = [
   { text: "Cursed Individual", rewardModifierPercent: 25, weight: 1 },
   { text: "Cult Member", rewardModifierPercent: 10, weight: 1 },
 
-    // >>> NEW: KUROVIAN FORCED EMPLOYER FOR AMBIT CONTRACTS <<<
-  { text: "Ambit representative", rewardModifierPercent: 25, weight: 1, kurovian: true }
+  { text: "Ambit representative", rewardModifierPercent: 25, weight: 1, kurovian: true },
+  { text: "Remnant operative", rewardModifierPercent: 25, weight: 1, kurovian: true }
 ];
 
 const externalComplication = [
@@ -217,7 +217,7 @@ const socialContract = [
   // TODO: Social Contract Area
   { text: "mediate a dispute between two families", baseRewardGp: 100, weight: 5 },
   { text: "deliver an apology on someone else's behalf", baseRewardGp: 25, weight: 5 },
-  { text: "collect a debt without causing", baseRewardGp: 25, weight: 5 },
+  { text: "collect a debt without causing physical harm", baseRewardGp: 25, weight: 5 },
   { text: "flatter a foreign dignitary", baseRewardGp: 75, weight: 5 },
 
   { text: "negotiate a truce between a guild and its workers", baseRewardGp: 125, weight: 3 },
@@ -262,7 +262,6 @@ const investigationContract = [
     }
   },
 
-  // >>> NEW: ADDS WEIRD PAYMENT <<<
   {
     text: "work as an blacksite Remnant operative",
     baseRewardGp: 400,
@@ -288,7 +287,7 @@ const weirdPayment = [
   { text: "a very rare magic item", rewardText: "a very rare magic item", weight: 2 },
 
   { text: "a village", rewardText: "village", weight: 1 },
-  { text: "a legendary magic item", rewardText: "a legendary magic item" },
+  { text: "a legendary magic item", rewardText: "a legendary magic item", weight: 1 },
 
   // TODO: Fill in Kurovian-only weird payment option.
   // This option is only visible/rollable when Kurovian Flavour is enabled.
