@@ -34,21 +34,6 @@ Investigation Contract table
   Where: src/legitimateContracts.js, the `investigationContract` array
   Notes: Looks mostly complete. Review weights and add more entries if needed.
 
-
-CONTENT - TAG TABLES (src/illegitimateContracts.js)
-----------------------------------------------------
-
-Real Purpose table
-  Where: src/illegitimateContracts.js, the `realPurpose` array
-  Notes: Three blank entries. Fill these in with real purpose flavour text.
-         Each entry uses: { text: "the real reason is...", rewardModifierPercent: 0, weight: 1 }
-
-Betrayal table
-  Where: src/illegitimateContracts.js, the `betrayal` array
-  Notes: One blank entry. Fill in with a betrayal scenario.
-         Each entry uses: { text: "the employer...", rewardModifierPercent: 25, weight: 1 }
-
-
 SEED CHANCES
 ------------
 

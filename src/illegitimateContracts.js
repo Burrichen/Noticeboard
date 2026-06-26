@@ -62,28 +62,30 @@ const ILLEGITIMATE_SEEDS = [
 // if an entry should only appear when Kurovian Flavour is enabled.
 
 const realPurpose = [
-  // TODO: Fill in real purpose option 1.
+  // TODO: Real Purpose Area
   { text: "completing the contract implicates the party in a larger problem", rewardModifierPercent: 0, weight: 4 },
 
-  { text: "a rival party is already involved", rewardModifierPercent: -5, weight: 4 },
+  { text: "completing the job distracts from the real crime", rewardModifierPercent: 20, weight: 3 },
+  { text: "the job is to test the party for future work", rewardModifierPercent: 0, weight: 3 },
+  
+  { text: "a rival party is already involved", rewardModifierPercent: -5, weight: 2 },
+  { text: "performing the job leads to evidence being stolen, destroyed or hidden", rewardModifierPercent: 10, weight: 2 },
 
-  { text: "", rewardModifierPercent: 0, weight: 1 },
-
-  { text: "", rewardModifierPercent: 0, weight: 1 },
-
-  { text: "", rewardModifierPercent: 0, weight: 1 }
+  { text: "performing the job starts a fued between two groups", rewardModifierPercent: 10, weight: 1 }
 ];
 
 const betrayal = [
-  // TODO: Fill in betrayal option 1.
+  // TODO: Betrayal Area 
   { text: "the employer will refuse to pay", rewardModifierPercent: 25, weight: 4 },
-  { text: "the employer vanishes after job completion", rewardModifierPercent: 25, weight: 4 },
+  { text: "the employer vanishes during job", rewardModifierPercent: 25, weight: 4 },
+  { text: "the city watch / enemies have already been tipped off", rewardModifierPercent: 0, weight: 4 },
 
   { text: "completing the contract forces the party to be involved in a larger problem", rewardModifierPercent: 10, weight: 2 },
+  { text: "the party is locked in, trapped or abandoned during the job", rewardModifierPercent: 0, weight: 2 },
 
   { text: "the job is an ambush", rewardModifierPercent: 0, weight: 1 },
-
-  { text: "", rewardModifierPercent: 0, weight: 1 }
+  { text: "the payment is fake, stolen or cursed", rewardModifierPercent: 50, weight: 1 },
+  { text: "the party is paid, but accepting payment implicates them", rewardModifierPercent: 10, weight: 1 }
 ];
 
 const ILLEGITIMATE_TAG_TABLES = {
@@ -350,7 +352,7 @@ function buildIllegitimateSentence(seed, contractTagKey, tags) {
   const contractText = asAction(tags[contractTagKey], getTagLabel(contractTagKey));
 
   if (seed.name === "Illegitimate False Premise") {
-    return `${subject} asks for people to ${contractText}, but the real purpose is ${asAction(tags.realPurpose, "real purpose")}.`;
+    return `${subject} asks for people to ${contractText}, however ${asAction(tags.realPurpose, "real purpose")}.`;
   }
 
   if (seed.name === "Illegitimate Betrayal") {

@@ -267,8 +267,11 @@ const investigationContract = [
     baseRewardGp: 400,
     kurovian: true,
     weight: 1,
-    additionalWeirdPayment: true
-  }
+    additionalWeirdPayment: true,
+    forcedTags: {
+      employer: "Remnant operative"
+    }
+  },
 ];
 
 const weirdPayment = [
