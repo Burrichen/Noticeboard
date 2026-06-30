@@ -95,60 +95,60 @@ const ILLEGAL_SEEDS = [
 // they will be ignored unless the whole table is blank.
 
 const criminalContract = [
-  // TODO: Criminal Contract Area
-  { text: "smuggle {contraband}", baseRewardGp: 200, weight: 10, subTableKey: "contraband" },
-  { text: "steal an item from {theftLocation}", baseRewardGp: 100, weight: 10, subTableKey: "theftLocation" },
-  { text: "plant an item or false message", baseRewardGp: 75, weight: 10 },
-  { text: "destroy, alter or steal official records", baseRewardGp: 75, weight: 10 },
-  { text: "sabotage a rival's business", baseRewardGp: 400, weight: 10 },
-  { text: "spy on a person or meeting", baseRewardGp: 125, weight: 10 },
-  { text: "'Convince' an offical", baseRewardGp: 150, weight: 10 },
-  { text: "arrange an assassination, disappearance or fatal accident", baseRewardGp: 500, weight: 10 },
-  { text: "commit a crime during a public ceremony", baseRewardGp: 350, weight: 10 }
+  // Roll d20. Total weight = 20. (4 common @ 3, 3 medium @ 2, 2 rare @ 1)
+  { text: "steal an item from {theftLocation}", baseRewardGp: 100, weight: 3, subTableKey: "theftLocation" },
+  { text: "spy on a person or meeting", baseRewardGp: 125, weight: 3 },
+  { text: "plant an item or false message", baseRewardGp: 75, weight: 3 },
+  { text: "'Convince' an offical", baseRewardGp: 150, weight: 3 },
+  { text: "smuggle {contraband}", baseRewardGp: 200, weight: 2, subTableKey: "contraband" },
+  { text: "destroy, alter or steal official records", baseRewardGp: 75, weight: 2 },
+  { text: "sabotage a rival's business", baseRewardGp: 400, weight: 2 },
+  { text: "arrange an assassination, disappearance or fatal accident", baseRewardGp: 500, weight: 1 },
+  { text: "commit a crime during a public ceremony", baseRewardGp: 350, weight: 1 }
 ];
 
 const criminalEmployer = [
-  // TODO: Criminal Employer Area
-  { text: "desperate local", rewardModifierPercent: -10, weight: 10 },
-  { text: "indebeted worker", rewardModifierPercent: -10, weight: 10 },
-  { text: "wronged individual", rewardModifierPercent: 15, weight: 10 },
-  { text: "corrupt guard", rewardModifierPercent: 10, weight: 10 },
-  { text: "corrupt city official", rewardModifierPercent: 20, weight: 5 },
-  { text: "vigilante", rewardModifierPercent: -5, weight: 3 },
-  { text: "fence", rewardModifierPercent: 20, weight: 5 },
-  { text: "gang representative", rewardModifierPercent: 0, weight: 5 },
-  { text: "fixer", rewardModifierPercent: 5, weight: 15 },
-  { text: "anonymous individual", rewardModifierPercent: 0, weight: 15 },
-  { text: "nobels ancient", rewardModifierPercent: 5, weight: 5 },
-  { text: "nobel", rewardModifierPercent: 15, weight: 3 },
-  { text: "cult member", rewardModifierPercent: 0, weight: 3 },
-  { text: "crime boss", rewardModifierPercent: 10, weight: 3 }
+  // Roll d100. Total weight = 100.
+  { text: "fixer", rewardModifierPercent: 5, weight: 11 },
+  { text: "anonymous individual", rewardModifierPercent: 0, weight: 11 },
+  { text: "desperate local", rewardModifierPercent: -10, weight: 9 },
+  { text: "indebeted worker", rewardModifierPercent: -10, weight: 9 },
+  { text: "wronged individual", rewardModifierPercent: 15, weight: 9 },
+  { text: "corrupt guard", rewardModifierPercent: 10, weight: 9 },
+  { text: "fence", rewardModifierPercent: 20, weight: 8 },
+  { text: "gang representative", rewardModifierPercent: 0, weight: 7 },
+  { text: "corrupt city official", rewardModifierPercent: 20, weight: 6 },
+  { text: "nobels ancient", rewardModifierPercent: 5, weight: 6 },
+  { text: "vigilante", rewardModifierPercent: -5, weight: 5 },
+  { text: "crime boss", rewardModifierPercent: 10, weight: 4 },
+  { text: "noble", rewardModifierPercent: 15, weight: 4 },
+  { text: "cult member", rewardModifierPercent: 0, weight: 2 }
 ];
 
 const shadyCondition = [
-  // TODO: Shady Condition Area
-  { text: "ensure there are no witnesses", rewardModifierPercent: 75, weight: 10 },
-  { text: "in the cover of night", rewardModifierPercent: 25, weight: 10 },
-  { text: "you must wear a disguse", rewardModifierPercent: 30, weight: 5 },
-  { text: "do not say a word on the job", rewardModifierPercent: 50, weight: 5 },
-  { text: "make it look like an accident", rewardModifierPercent: 75, weight: 10 },
-  { text: "complete the job in X days", rewardModifierPercent: 30, weight: 15 },
+  // Roll d20. Total weight = 20.
+  { text: "complete the job in X days", rewardModifierPercent: 30, weight: 6 },
+  { text: "in the cover of night", rewardModifierPercent: 25, weight: 5 },
+  { text: "make it look like an accident", rewardModifierPercent: 75, weight: 4 },
+  { text: "ensure there are no witnesses", rewardModifierPercent: 75, weight: 3 },
+  { text: "you must wear a disguse", rewardModifierPercent: 30, weight: 1 },
+  { text: "do not say a word on the job", rewardModifierPercent: 50, weight: 1 },
 ];
 
 const contraband = [
-  // TODO: Contraband Area
-  { text: "drugs", weight: 10 },
-  { text: "weapons", weight: 10 },
-  { text: "a fugitive", weight: 5 },
-  { text: "cursed items", weight: 5 }
+  // Roll d6. Total weight = 6.
+  { text: "drugs", weight: 2 },
+  { text: "weapons", weight: 2 },
+  { text: "a fugitive", weight: 1 },
+  { text: "cursed items", weight: 1 }
 ];
 
 const theftLocation = [
-  // TODO: Theft Location Area
-  { text: "a house", weight: 10 },
-  { text: "a shop", weight: 15 },
-  { text: "a guildhall", weight: 7 },
-  { text: "an estate", weight: 5 }
+  // Roll d6. Total weight = 6.
+  { text: "a house", weight: 2 },
+  { text: "a shop", weight: 2 },
+  { text: "a guildhall", weight: 1 },
+  { text: "an estate", weight: 1 }
 ];
 
 const ILLEGAL_TAG_TABLES = {

@@ -5,6 +5,7 @@ const colours = {
   reverse: "\x1b[7m",
 
   // Dark fantasy palette
+  deepGreen: "\x1b[38;5;28m",
   blood: "\x1b[38;5;124m",
   ember: "\x1b[38;5;130m",
   tarnishedGold: "\x1b[38;5;178m",
@@ -55,11 +56,11 @@ function optionName(text, colourCode = colours.oldBone) {
 }
 
 function selectedOptionName(text, colourCode = colours.oldBone) {
-  return `${colours.reverse}${colourCode}${colours.bold}${text}${colours.reset}`;
+  return `${colourCode}${colours.bold}${text}${colours.reset}`;
 }
 
 function selectedSubtitle(text) {
-  return `${colours.reverse}${colours.graveAsh}${text}${colours.reset}`;
+  return `${colours.bold}${colours.graveAsh}${text}${colours.reset}`;
 }
 
 function cursor(text) {
@@ -109,10 +110,6 @@ function contractType(text) {
 
   if (text === "Legitimate") {
     return legitimate(text);
-  }
-
-  if (text === "World-building Note") {
-    return note(text);
   }
 
   return text;

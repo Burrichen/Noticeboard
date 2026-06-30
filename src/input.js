@@ -3,6 +3,20 @@ const readline = require("readline");
 const { stdin: input, stdout: output } = require("process");
 const style = require("./style");
 
+class GoBackError extends Error {
+  constructor() { super("Go back"); this.name = "GoBackError"; }
+}
+
+class SkipToResultsError extends Error {
+  constructor() { super("Skip to results"); this.name = "SkipToResultsError"; }
+}
+
+let autoRollActive = false;
+
+function resetAutoRoll() {
+  autoRollActive = false;
+}
+
 async function ask(question) {
   disableRawMode();
 
@@ -34,6 +48,10 @@ async function chooseFromList(config) {
 
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("chooseFromList requires at least one item.");
+  }
+
+  if (autoRollActive) {
+    return Math.floor(Math.random() * items.length) + 1;
   }
 
   let selectedIndex = 0;
@@ -99,9 +117,21 @@ async function chooseFromList(config) {
       return selectedIndex + 1;
     }
 
+    if (key.name === "escape") {
+      throw new SkipToResultsError();
+    }
+
     if (key.name === "backspace") {
+      if (typedNumber === "") {
+        throw new GoBackError();
+      }
       typedNumber = typedNumber.slice(0, -1);
       continue;
+    }
+
+    if (key.name === "r") {
+      autoRollActive = true;
+      return Math.floor(Math.random() * items.length) + 1;
     }
 
     if (key.name === "digit") {
@@ -217,6 +247,7 @@ function renderChoiceList(config) {
       : "type a number then Enter, or use ↑/↓ then Enter";
 
   lines.push(style.prompt(`${config.prompt} `) + style.dim(`(${instruction})`));
+  lines.push(style.dim("  R: auto-roll rest  •  Esc: skip to results  •  ← back"));
 
   if (config.typedNumber !== "") {
     lines.push(
@@ -291,6 +322,14 @@ function normaliseKey(rawKey) {
     return { name: "backspace" };
   }
 
+  if (rawKey === "") {
+    return { name: "escape" };
+  }
+
+  if (rawKey === "r" || rawKey === "R") {
+    return { name: "r" };
+  }
+
   if (/^\d$/.test(rawKey)) {
     return {
       name: "digit",
@@ -356,6 +395,9 @@ function cleanQuestionForTitle(question) {
 }
 
 module.exports = {
+  GoBackError,
+  SkipToResultsError,
+  resetAutoRoll,
   ask,
   askNumber,
   chooseFromList,

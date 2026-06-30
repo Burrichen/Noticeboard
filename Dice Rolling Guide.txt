@@ -1,0 +1,419 @@
+================================================================
+  DND NOTICEBOARD GENERATOR — MANUAL ROLLING GUIDE
+================================================================
+  How to use these tables with real dice at the table.
+
+  DICE NEEDED
+  -----------
+  d4, d6, d8, d10, d12, d20, d100 (or two d10s as percentile)
+
+================================================================
+  STEP 1 — ROLL QUALITY
+================================================================
+  Roll 1d10 to find the noticeboard's quality and reputation.
+
+  1–2   Underground   Criminal or black-market board
+  3–4   Decrepit      Neglected, unreliable
+  5–6   Standard      Average town board
+  7–8   Good          Well-maintained, reputable
+  9–10  Pristine      Official, well-funded
+
+================================================================
+  STEP 2 — ROLL SIZE
+================================================================
+  Roll 1d10 to find how many notices are posted.
+
+  1–2   Tiny      Roll 1d4   notices
+  3–4   Small     Roll 2d4   notices
+  5–6   Average   Roll 3d4–1 notices (minimum 2)
+  7–8   Large     Roll 4d4   notices
+  9–10  Enormous  Roll 5d4–1 notices (minimum 4)
+
+================================================================
+  STEP 3 — CONTRACT TYPE PER NOTICE (roll d100)
+================================================================
+  For each notice, roll d100 on the table for your quality.
+
+  UNDERGROUND (01–70 Illegal, 71–95 Illegitimate, 96–100 Legitimate)
+  ─────────────────────────────────────────────────────────────────
+  01–70   Illegal
+  71–95   Illegitimate
+  96–00   Legitimate
+
+  DECREPIT (01–35 Illegal, 36–70 Illegitimate, 71–100 Legitimate)
+  ─────────────────────────────────────────────────────────────────
+  01–35   Illegal
+  36–70   Illegitimate
+  71–00   Legitimate
+
+  STANDARD (01–15 Illegal, 16–55 Illegitimate, 56–100 Legitimate)
+  ─────────────────────────────────────────────────────────────────
+  01–15   Illegal
+  16–55   Illegitimate
+  56–00   Legitimate
+
+  GOOD (01–10 Illegal, 11–45 Illegitimate, 46–100 Legitimate)
+  ─────────────────────────────────────────────────────────────────
+  01–10   Illegal
+  11–45   Illegitimate
+  46–00   Legitimate
+
+  PRISTINE (01–05 Illegal, 06–15 Illegitimate, 16–100 Legitimate)
+  ─────────────────────────────────────────────────────────────────
+  01–05   Illegal
+  06–15   Illegitimate
+  16–00   Legitimate
+
+================================================================
+  STEP 4 — LEGITIMATE CONTRACTS
+================================================================
+
+  4a. ROLL SEED (d100)
+  ─────────────────────────────────────────────────────────────────
+  01–30   Legitimate Simple        contract + employer
+  31–45   Legitimate Complicated   contract + employer + complication
+  46–60   Legitimate Dangerous     dangerousContract + employer
+  61–70   Legitimate Weird         weirdContract + employer
+  71–80   Legitimate Social        socialContract + employer
+  81–95   Legitimate Investigation investigationContract + employer
+  96–00   Legitimate Weird Payment dangerousContract + weird payment only
+
+
+  4b. CONTRACT TABLE (d100)
+  ─────────────────────────────────────────────────────────────────
+  01–28   work at a {job}*
+  29–46   escort an individual
+  47–62   deliver a sealed letter
+  63–72   deliver an object of importance
+  73–80   guard a location overnight
+  81–87   escort a caravan
+  88–92   carry supplies to an isolated location**
+  93–96   find a missing animal
+  97–99   retrieve a stranded vehicle***
+  00      escort a disliked figure through town****
+
+  *  Roll d10 for Job:
+     1 lumber mill  2 mine  3 repair work  4 cargo lifting
+     5 farm  6 forge  7 tavern  8 bakery
+     9 courier service  10 cleaners service
+
+  ** Roll d6 for Isolated Location:
+     1–2 house  3–4 farm  5–6 outpost
+
+  *** Roll d6 for Stranded Vehicle:
+      1–2 wagon  3–4 cart  5–6 boat
+
+  **** Roll d6 for Disliked Figure:
+       1–2 official  3–4 collector  5–6 guild agent
+
+
+  4c. EMPLOYER TABLE (d100)
+  ─────────────────────────────────────────────────────────────────
+  01–12   Local Merchant          (+5% reward)
+  13–24   Farmer                  (–5% reward)
+  25–36   Local Resident          (–10% reward)
+  37–42   Town Guard              (no modifier)
+  43–48   Shopkeeper              (+5% reward)
+  49–54   Innkeeper               (no modifier)
+  55–57   Retired Adventurer      (no modifier)
+  58–60   Guild Representative    (+10% reward)
+  61–63   Village Elder           (–10% reward)
+  64–66   Council Member          (+5% reward)
+  67–69   Priest                  (–10% reward)
+  70–72   Caravan Master          (+5% reward)
+  73–75   Nobel's Steward         (+5% reward)
+  76–78   Artisan                 (+15% reward)
+  79–81   Dockworker/ferryman     (no modifier)
+  82–84   Scholar                 (–5% reward)
+  85–87   Courier                 (no modifier)
+  88–90   Scribe                  (+5% reward)
+  91–93   Criminal Contact        (no modifier)
+  94–96   Healer                  (–5% reward)
+  97      Nobel                   (+75% reward)
+  98      Anonymous Patron        (+25% reward)
+  99      Cursed Individual       (+25% reward)
+  00      Cult Member             (+10% reward)
+
+  [Kurovian Flavour — add to high end if enabled:]
+  101     Ambit representative    (+25% reward)
+  102     Remnant operative       (+25% reward)
+
+
+  4d. EXTERNAL COMPLICATION TABLE (d10)
+  Only used for the "Complicated" seed.
+  ─────────────────────────────────────────────────────────────────
+  1    the job must be completed in a limited timeframe
+  2    the employer has no information about the contract
+  3    the employer has unwittingly given false information
+  4    another group has already accepted the contract
+  5    an alternative group wants the contract to fail
+  6    another group has already accepted the contract
+  7    the job attracts unwanted public attention
+  8    the contract requires following a local custom
+  9    the employer has a strange reputation
+  10   the job is merely one part of a much larger scheme
+
+
+  4e. DANGEROUS CONTRACT TABLE (d20)
+  Used for the "Dangerous" and "Weird Payment" seeds.
+  ─────────────────────────────────────────────────────────────────
+  1–2   hunt a monster that's been attacking travellers
+  3–4   drive off a beast that's been threatening livestock
+  5–6   clear creatures out of an abandoned building
+  7     exorcise a ghost from a location*
+  8–9   rescue someone trapped in a dangerous location
+  10    destroy a brood den
+  11    protect a location from incoming attack**
+  12    capture a dangerous outlaw alive
+  13–14 kill a dangerous outlaw
+  15    recover an item from a monster's lair or haunted place
+  16    hunt a creature with a specific trigger condition
+  17    guard an event from hostile forces***
+  18    break into a dangerous location to recover captives or proof
+  19    destroy a cursed object****
+  20    survive a night in a cursed or haunted location
+
+  *  Roll d4 for Haunted Location:
+     1 a home  2 a graveyard  3 a shrine  4 an inn
+
+  ** Roll d6 for Protected Location:
+     1–2 a caravan  3–4 a farm  5–6 an outpost
+
+  *** Roll d6 for Guarded Event:
+      1–2 ritual  3–4 burial  5–6 ceremony
+
+  **** Roll d6 for Cursed Thing:
+       1–2 object  3–4 relic  5–6 shrine
+
+
+  4f. WEIRD CONTRACT TABLE (d4)
+  Only used for the "Weird" seed.
+  ─────────────────────────────────────────────────────────────────
+  1    give a ghost one last day of fun
+  2    investigate and end a curse affecting a subject*
+  3    break a supernatural bargain
+  4    return something that does not belong in the mortal realm
+
+  * Roll d6 for Cursed Subject:
+    1–2 person  3–4 family  5–6 place
+
+
+  4g. SOCIAL CONTRACT TABLE (d12)
+  Only used for the "Social" seed.
+  ─────────────────────────────────────────────────────────────────
+  1–2   mediate a dispute between two families
+  3     deliver an apology on someone else's behalf
+  4     collect a debt without causing physical harm
+  5     flatter a foreign dignitary
+  6     negotiate a truce between a guild and its workers
+  7     act as a guild representative on a sensitive matter
+  8     deliver a confession on someone else's behalf
+  9     serve as a neutral witness for a contract
+  10    serve as a neutral witness for a wedding
+  11    chaperone a troublesome rich kid for the day
+  12    chaperone a troublesome noble guest for the day
+
+
+  4h. INVESTIGATION CONTRACT TABLE (d100)
+  Only used for the "Investigation" seed.
+  ─────────────────────────────────────────────────────────────────
+  01–12   infiltrate a masked ball
+  13–24   assist solving a mundane crime
+  25–34   follow someone without being seen
+  35–44   investigate a secret meeting
+  45–53   find a missing person
+  54–61   trace a stolen object through the criminal underworld
+  62–69   infiltrate a hideout
+  70–77   solve a murder
+  78–85   assist solving a magical crime
+  86–93   infiltrate a cult
+  94–98   find a witness who has gone missing
+  99–00   track a kidnapper before they leave the country
+
+  [Kurovian Flavour — add to high end if enabled:]
+  101–104  work for the Ambit             (adds weird payment)
+  105–106  work as a Remnant operative    (adds weird payment)
+
+
+  4i. WEIRD PAYMENT TABLE (d20)
+  Used when a contract grants weird payment instead of (or in
+  addition to) GP. Roll d20.
+  ─────────────────────────────────────────────────────────────────
+  1–4    a favour from a person of power
+  5–8    an uncommon magic item
+  9–10   a piece of land
+  11–12  a rare magic item
+  13     a custom-made weapon, armour piece, tool, or arcane focus
+  14     property in a nearby village, town, or city
+  15     mayoralship of a village
+  16     a blessing, oath, or supernatural protection
+  17     proficiency training
+  18     a very rare magic item
+  19     a village
+  20     a legendary magic item
+
+  [Kurovian Flavour — reroll or add on 21:]
+  21     crystallised Axius
+
+================================================================
+  STEP 5 — ILLEGITIMATE CONTRACTS
+================================================================
+
+  5a. ROLL SEED (d100)
+  ─────────────────────────────────────────────────────────────────
+  01–75   Illegitimate False Premise   (uses contract table + real purpose)
+  76–00   Illegitimate Betrayal        (uses contract table + betrayal)
+
+  For the contract table, first roll d3 (or d6, halved) to pick:
+    1  Dangerous Contract  →  roll on the Dangerous Contract table (4e)
+    2  Social Contract     →  roll on the Social Contract table (4g)
+    3  Investigation Contract → roll on the Investigation table (4h)
+
+
+  5b. REAL PURPOSE TABLE (d12)
+  Used for the "False Premise" seed.
+  ─────────────────────────────────────────────────────────────────
+  1–3    completing the contract implicates the party in a larger problem
+  4–6    completing the job distracts from the real crime
+  7–8    the job is to test the party for future work
+  9–10   a rival party is already involved
+  11     performing the job leads to evidence being stolen or destroyed
+  12     performing the job starts a feud between two groups
+
+
+  5c. BETRAYAL TABLE (d12)
+  Used for the "Betrayal" seed.
+  ─────────────────────────────────────────────────────────────────
+  1–2    the employer will refuse to pay
+  3–4    the employer vanishes during the job
+  5–6    the city watch / enemies have already been tipped off
+  7–8    completing the contract forces party into a larger problem
+  9      the party is locked in, trapped, or abandoned during the job
+  10     the job is an ambush
+  11     the payment is {paymentCondition}*
+  12     the party is paid, but accepting payment implicates them
+
+  * Roll d6 for Payment Condition:
+    1–3 fake   4–5 stolen   6 cursed
+
+================================================================
+  STEP 6 — ILLEGAL CONTRACTS
+================================================================
+
+  6a. ROLL SEED (d100)
+  ─────────────────────────────────────────────────────────────────
+  01–25   Illegal Shady            (existing contract + shady condition + criminal employer)
+  26–65   Illegal Simple Criminal  (criminal contract + criminal employer)
+  66–00   Illegal Complicated      (criminal contract + shady condition + criminal employer)
+
+  For the "Shady" seed, first roll d2 (coin flip) to pick:
+    1  Contract table (4b)
+    2  Dangerous Contract table (4e)
+
+
+  6b. CRIMINAL CONTRACT TABLE (d20)
+  ─────────────────────────────────────────────────────────────────
+  1–3    steal an item from a location*
+  4–6    spy on a person or meeting
+  7–9    plant an item or false message
+  10–12  'convince' an official
+  13–14  smuggle contraband**
+  15–16  destroy, alter, or steal official records
+  17–18  sabotage a rival's business
+  19     arrange an assassination, disappearance, or fatal accident
+  20     commit a crime during a public ceremony
+
+  * Roll d6 for Theft Location:
+    1–2 a house  3–4 a shop  5 a guildhall  6 an estate
+
+  ** Roll d6 for Contraband:
+     1–2 drugs  3–4 weapons  5 a fugitive  6 cursed items
+
+
+  6c. CRIMINAL EMPLOYER TABLE (d100)
+  ─────────────────────────────────────────────────────────────────
+  01–11   fixer               (+5% reward)
+  12–22   anonymous individual (no modifier)
+  23–31   desperate local     (–10% reward)
+  32–40   indebted worker     (–10% reward)
+  41–49   wronged individual  (+15% reward)
+  50–58   corrupt guard       (+10% reward)
+  59–66   fence               (+20% reward)
+  67–73   gang representative (no modifier)
+  74–79   corrupt city official (+20% reward)
+  80–85   noble's ancient     (+5% reward)
+  86–90   vigilante           (–5% reward)
+  91–94   crime boss          (+10% reward)
+  95–98   noble               (+15% reward)
+  99–00   cult member         (no modifier)
+
+
+  6d. SHADY CONDITION TABLE (d20)
+  Only used for "Shady" and "Complicated" seeds.
+  ─────────────────────────────────────────────────────────────────
+  1–6    complete the job in X days
+  7–11   in the cover of night
+  12–15  make it look like an accident
+  16–18  ensure there are no witnesses
+  19     you must wear a disguise
+  20     do not say a word on the job
+
+================================================================
+  REWARD CALCULATION (optional)
+================================================================
+  Each contract has a base GP reward set by the contract entry.
+  Employer and complication entries carry a reward modifier (%).
+
+  Final GP = base reward × (1 + sum of all modifiers / 100)
+             + random drift of ±15%
+
+  Round down. Minimum 1 GP.
+
+  If a weird payment is added, append it to the GP reward:
+  e.g. "150 GP + a favour from a person of power"
+
+================================================================
+  QUICK REFERENCE — WHICH DIE FOR WHICH TABLE
+================================================================
+  Quality           1d10
+  Size              1d10
+  Notice count      see Size result
+  Contract type     1d100 (per quality table above)
+  ─────────────────────────────────────────────────────────────
+  Legitimate seed       1d100
+  Contract              1d100
+  Employer              1d100
+  External Complication 1d10
+  Dangerous Contract    1d20
+  Weird Contract        1d4
+  Social Contract       1d12
+  Investigation         1d100
+  Weird Payment         1d20
+  ─────────────────────────────────────────────────────────────
+  Illegitimate seed     1d100
+  Contract base pick    1d3
+  Real Purpose          1d12
+  Betrayal              1d12
+  ─────────────────────────────────────────────────────────────
+  Illegal seed          1d100
+  Contract base pick    1d2
+  Criminal Contract     1d20
+  Criminal Employer     1d100
+  Shady Condition       1d20
+  ─────────────────────────────────────────────────────────────
+  Job                   1d10
+  Contraband            1d6
+  Theft Location        1d6
+  Isolated Location     1d6
+  Haunted Location      1d4
+  Protected Location    1d6
+  Stranded Vehicle      1d6
+  Cursed Thing          1d6
+  Disliked Figure       1d6
+  Cursed Subject        1d6
+  Guarded Event         1d6
+  Payment Condition     1d6
+
+================================================================
+  Made by Burrichen
+================================================================

@@ -12,7 +12,8 @@ export const appState = {
   activeChoice: null,
   selectedChoiceIndex: 0,
   typedNumber: "",
-  typedNumberTimer: null
+  typedNumberTimer: null,
+  exportMessage: null
 };
 
 export function newBoard() {

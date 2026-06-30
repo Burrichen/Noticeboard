@@ -64,27 +64,22 @@ const ILLEGITIMATE_SEEDS = [
 // if an entry should only appear when Kurovian Flavour is enabled.
 
 const realPurpose = [
-  // TODO: Real Purpose Area
-  { text: "completing the contract implicates the party in a larger problem", rewardModifierPercent: 0, weight: 4 },
-
+  // Roll d12. Total weight = 12.
+  { text: "completing the contract implicates the party in a larger problem", rewardModifierPercent: 0, weight: 3 },
   { text: "completing the job distracts from the real crime", rewardModifierPercent: 20, weight: 3 },
-  { text: "the job is to test the party for future work", rewardModifierPercent: 0, weight: 3 },
-  
+  { text: "the job is to test the party for future work", rewardModifierPercent: 0, weight: 2 },
   { text: "a rival party is already involved", rewardModifierPercent: -5, weight: 2 },
-  { text: "performing the job leads to evidence being stolen, destroyed or hidden", rewardModifierPercent: 10, weight: 2 },
-
+  { text: "performing the job leads to evidence being stolen, destroyed or hidden", rewardModifierPercent: 10, weight: 1 },
   { text: "performing the job starts a fued between two groups", rewardModifierPercent: 10, weight: 1 }
 ];
 
 const betrayal = [
-  // TODO: Betrayal Area 
-  { text: "the employer will refuse to pay", rewardModifierPercent: 25, weight: 4 },
-  { text: "the employer vanishes during job", rewardModifierPercent: 25, weight: 4 },
-  { text: "the city watch / enemies have already been tipped off", rewardModifierPercent: 0, weight: 4 },
-
+  // Roll d12. Total weight = 12. (4 common @ 2, 4 uncommon @ 1)
+  { text: "the employer will refuse to pay", rewardModifierPercent: 25, weight: 2 },
+  { text: "the employer vanishes during job", rewardModifierPercent: 25, weight: 2 },
+  { text: "the city watch / enemies have already been tipped off", rewardModifierPercent: 0, weight: 2 },
   { text: "completing the contract forces the party to be involved in a larger problem", rewardModifierPercent: 10, weight: 2 },
-  { text: "the party is locked in, trapped or abandoned during the job", rewardModifierPercent: 0, weight: 2 },
-
+  { text: "the party is locked in, trapped or abandoned during the job", rewardModifierPercent: 0, weight: 1 },
   { text: "the job is an ambush", rewardModifierPercent: 0, weight: 1 },
   { text: "the payment is {paymentCondition}", rewardModifierPercent: 50, weight: 1, subTableKey: "paymentCondition" },
   { text: "the party is paid, but accepting payment implicates them", rewardModifierPercent: 10, weight: 1 }

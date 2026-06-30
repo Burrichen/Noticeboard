@@ -118,157 +118,146 @@ const LEGITIMATE_SEEDS = [
 // they will be ignored unless the whole table is blank.
 
 const contract = [
-  // TODO: Contract Area
-  { text: "work a job", baseRewardGp: 10, weight: 30 },
-  { text: "escort an individual", baseRewardGp: 25, weight: 20 },
-  { text: "deliver a sealed letter", baseRewardGp: 20, weight: 20 },
+  // Roll d100. Total weight = 100.
+  { text: "work at a {job}", baseRewardGp: 10, weight: 28, subTableKey: "job" },
+  { text: "escort an individual", baseRewardGp: 25, weight: 18 },
+  { text: "deliver a sealed letter", baseRewardGp: 20, weight: 16 },
   { text: "deliver an object of importance", baseRewardGp: 50, weight: 10 },
-  { text: "guard a location overnight", baseRewardGp: 20, weight: 10 },
-  { text: "escort a caravan", baseRewardGp: 40, weight: 10 },
+  { text: "guard a location overnight", baseRewardGp: 20, weight: 8 },
+  { text: "escort a caravan", baseRewardGp: 40, weight: 7 },
   { text: "carry supplies to an isolated {isolatedLocation}", baseRewardGp: 20, weight: 5, subTableKey: "isolatedLocation" },
-  { text: "find a missing animal", baseRewardGp: 5, weight: 5 },
-  { text: "retrieve a {strandedVehicle} stranded off-route", baseRewardGp: 30, weight: 5, subTableKey: "strandedVehicle" },
+  { text: "find a missing animal", baseRewardGp: 5, weight: 4 },
+  { text: "retrieve a {strandedVehicle} stranded off-route", baseRewardGp: 30, weight: 3, subTableKey: "strandedVehicle" },
   { text: "escort a disliked {dislikedFigure} through town", baseRewardGp: 50, weight: 1, subTableKey: "dislikedFigure" }
 ];
 
 const employer = [
-  // TODO: Employer Area
-  // weight: 20 = fairly common
-  { text: "Local Merchant", rewardModifierPercent: 5, weight: 20 },
-  { text: "Farmer", rewardModifierPercent: -5, weight: 20 },
-  { text: "Local Resident", rewardModifierPercent: -10, weight: 20 },
+  // Roll d100 (non-Kurovian total = 100). Kurovian entries add to the pool when enabled.
+  // Common (12 each)
+  { text: "Local Merchant", rewardModifierPercent: 5, weight: 12 },
+  { text: "Farmer", rewardModifierPercent: -5, weight: 12 },
+  { text: "Local Resident", rewardModifierPercent: -10, weight: 12 },
 
-  // weight: 10 = normal
-  { text: "Town Guard", rewardModifierPercent: 0, weight: 10 },
-  { text: "Shopkeeper", rewardModifierPercent: 5, weight: 10 },
-  { text: "Innkeeper", rewardModifierPercent: 0, weight: 10 },
+  // Normal (6 each)
+  { text: "Town Guard", rewardModifierPercent: 0, weight: 6 },
+  { text: "Shopkeeper", rewardModifierPercent: 5, weight: 6 },
+  { text: "Innkeeper", rewardModifierPercent: 0, weight: 6 },
 
-  // weight: 5 = uncommon
-  { text: "Retired Adventurer", rewardModifierPercent: 0, weight: 5 },
-  { text: "Guild Representative", rewardModifierPercent: 10, weight: 5 },
-  { text: "Village Elder", rewardModifierPercent: -10, weight: 5 },
-  { text: "Council Member", rewardModifierPercent: 5, weight: 5 },
-  { text: "Priest", rewardModifierPercent: -10, weight: 5 },
-  { text: "Caravan Master", rewardModifierPercent: 5, weight: 5 },
-  { text: "Nobel's Steward", rewardModifierPercent: 5, weight: 5 },
-  { text: "Artisan", rewardModifierPercent: 15, weight: 5 },
-  { text: "Dockworker, ferryman or stablemaster", rewardModifierPercent: 0, weight: 5 },
-  { text: "Scholar", rewardModifierPercent: -5, weight: 5 },
-  { text: "Courier", rewardModifierPercent: 0, weight: 5 },
-  { text: "Scribe", rewardModifierPercent: 5, weight: 5 },
-  { text: "Criminal Contact", rewardModifierPercent: 0, weight: 5 },
-  { text: "Healer", rewardModifierPercent: -5, weight: 5 },
+  // Uncommon (3 each)
+  { text: "Retired Adventurer", rewardModifierPercent: 0, weight: 3 },
+  { text: "Guild Representative", rewardModifierPercent: 10, weight: 3 },
+  { text: "Village Elder", rewardModifierPercent: -10, weight: 3 },
+  { text: "Council Member", rewardModifierPercent: 5, weight: 3 },
+  { text: "Priest", rewardModifierPercent: -10, weight: 3 },
+  { text: "Caravan Master", rewardModifierPercent: 5, weight: 3 },
+  { text: "Nobel's Steward", rewardModifierPercent: 5, weight: 3 },
+  { text: "Artisan", rewardModifierPercent: 15, weight: 3 },
+  { text: "Dockworker, ferryman or stablemaster", rewardModifierPercent: 0, weight: 3 },
+  { text: "Scholar", rewardModifierPercent: -5, weight: 3 },
+  { text: "Courier", rewardModifierPercent: 0, weight: 3 },
+  { text: "Scribe", rewardModifierPercent: 5, weight: 3 },
+  { text: "Criminal Contact", rewardModifierPercent: 0, weight: 3 },
+  { text: "Healer", rewardModifierPercent: -5, weight: 3 },
 
-  // weight: 1 = rare
+  // Rare (1 each)
   { text: "Nobel", rewardModifierPercent: 75, weight: 1 },
   { text: "Anonymous Patron", rewardModifierPercent: 25, weight: 1 },
   { text: "Cursed Individual", rewardModifierPercent: 25, weight: 1 },
   { text: "Cult Member", rewardModifierPercent: 10, weight: 1 },
 
+  // Kurovian only (add to pool when Kurovian Flavour is enabled)
   { text: "Ambit representative", rewardModifierPercent: 25, weight: 1, kurovian: true },
   { text: "Remnant operative", rewardModifierPercent: 25, weight: 1, kurovian: true }
 ];
 
 const externalComplication = [
-  // TODO: External Complication Area
-  { text: "the job must be completed in a limited timeframe", baseRewardGp: 25 },
-  { text: "the employer has no information about the contract", rewardModifierPercent: 10 },
-  { text: "the employer has unwittingly given false information", rewardModifierPercent: 0 },
-  { text: "another group has already accepted the contract", rewardModifierPercent: -10 },
-  { text: "an alternative group has an active interest in the contract not being fulfilled", rewardModifierPercent: 0 },
-  { text: "another group has already accepted the contract", rewardModifierPercent: 0 },
-  { text: "the job attracts unwanted public attention", rewardModifierPercent: 10 },
-  { text: "the contract requires following a local custom", rewardModifierPercent: 5 },
-  { text: "the employer has a strange reputation", rewardModifierPercent: 5 },
-  { text: "the job is merely one part of a much larger ", rewardModifierPercent: 0 }
+  // Roll d10. Total weight = 10 (equal chance).
+  { text: "the job must be completed in a limited timeframe", baseRewardGp: 25, weight: 1 },
+  { text: "the employer has no information about the contract", rewardModifierPercent: 10, weight: 1 },
+  { text: "the employer has unwittingly given false information", rewardModifierPercent: 0, weight: 1 },
+  { text: "another group has already accepted the contract", rewardModifierPercent: -10, weight: 1 },
+  { text: "an alternative group has an active interest in the contract not being fulfilled", rewardModifierPercent: 0, weight: 1 },
+  { text: "another group has already accepted the contract", rewardModifierPercent: 0, weight: 1 },
+  { text: "the job attracts unwanted public attention", rewardModifierPercent: 10, weight: 1 },
+  { text: "the contract requires following a local custom", rewardModifierPercent: 5, weight: 1 },
+  { text: "the employer has a strange reputation", rewardModifierPercent: 5, weight: 1 },
+  { text: "the job is merely one part of a much larger ", rewardModifierPercent: 0, weight: 1 }
 ];
 
 const dangerousContract = [
-  // TODO: Dangerous Contract Area
-  { text: "hunt a monster that's been attacking travellers", rewardModifierPercent: 100 },
-  { text: "drive off a beast that's been threatening livestock", baseRewardGp: 100 },
-  { text: "clear creatures out of an abandoned building", baseRewardGp: 100 },
-  { text: "exorcise a ghost from {hauntedLocation}", baseRewardGp: 200, subTableKey: "hauntedLocation" },
-  { text: "rescue someone trapped in a dangerous location", baseRewardGp: 200 },
-  { text: "destroy a brood den", baseRewardGp: 125 },
-  { text: "protect {protectedLocation} from incoming attack", baseRewardGp: 150, subTableKey: "protectedLocation" },
-  { text: "capture a dangerous outlaw alive", baseRewardGp: 125 },
-  { text: "kill a dangerous outlaw", baseRewardGp: 75 },
-  { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125 },
-  { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150 },
-  { text: "guard a {guardedEvent} from hostile forces", baseRewardGp: 125, subTableKey: "guardedEvent" },
-  { text: "break into a dangerous location to recover captives or proof", baseRewardGp: 300 },
-  { text: "destroy a cursed {cursedThing}", baseRewardGp: 150, subTableKey: "cursedThing" },
-  { text: "survive a night in a cursed or haunted location", baseRewardGp: 300 }
+  // Roll d20. Total weight = 20. Common entries (weight 2) are typical adventuring jobs.
+  { text: "hunt a monster that's been attacking travellers", rewardModifierPercent: 100, weight: 2 },
+  { text: "drive off a beast that's been threatening livestock", baseRewardGp: 100, weight: 2 },
+  { text: "clear creatures out of an abandoned building", baseRewardGp: 100, weight: 2 },
+  { text: "exorcise a ghost from {hauntedLocation}", baseRewardGp: 200, subTableKey: "hauntedLocation", weight: 1 },
+  { text: "rescue someone trapped in a dangerous location", baseRewardGp: 200, weight: 2 },
+  { text: "destroy a brood den", baseRewardGp: 125, weight: 1 },
+  { text: "protect {protectedLocation} from incoming attack", baseRewardGp: 150, subTableKey: "protectedLocation", weight: 1 },
+  { text: "capture a dangerous outlaw alive", baseRewardGp: 125, weight: 1 },
+  { text: "kill a dangerous outlaw", baseRewardGp: 75, weight: 2 },
+  { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125, weight: 1 },
+  { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150, weight: 1 },
+  { text: "guard a {guardedEvent} from hostile forces", baseRewardGp: 125, subTableKey: "guardedEvent", weight: 1 },
+  { text: "break into a dangerous location to recover captives or proof", baseRewardGp: 300, weight: 1 },
+  { text: "destroy a cursed {cursedThing}", baseRewardGp: 150, subTableKey: "cursedThing", weight: 1 },
+  { text: "survive a night in a cursed or haunted location", baseRewardGp: 300, weight: 1 }
 ];
 
 const weirdContract = [
-  // TODO: Weird Contract Area
+  // Roll d4. Total weight = 4 (equal). The empty 5th slot is a placeholder — skip it.
   { text: "give a ghost one last day of fun", baseRewardGp: 250, weight: 1 },
-
-  { text: "investigate and end a curse affecting a {cursedSubject}", baseRewardGp: 300, subTableKey: "cursedSubject" },
-
-  { text: "break a supernatural bargain", baseRewardGp: 250 },
-
-  { text: "return something that does not belong in the mortal realm", baseRewardGp: 0 },
-
+  { text: "investigate and end a curse affecting a {cursedSubject}", baseRewardGp: 300, subTableKey: "cursedSubject", weight: 1 },
+  { text: "break a supernatural bargain", baseRewardGp: 250, weight: 1 },
+  { text: "return something that does not belong in the mortal realm", baseRewardGp: 0, weight: 1 },
   { text: "", baseRewardGp: 0 }
 ];
 
 const socialContract = [
-  // TODO: Social Contract Area
-  { text: "mediate a dispute between two families", baseRewardGp: 100, weight: 5 },
-  { text: "deliver an apology on someone else's behalf", baseRewardGp: 25, weight: 5 },
-  { text: "collect a debt without causing physical harm", baseRewardGp: 25, weight: 5 },
-  { text: "flatter a foreign dignitary", baseRewardGp: 75, weight: 5 },
-
-  { text: "negotiate a truce between a guild and its workers", baseRewardGp: 125, weight: 3 },
-  { text: "act as a guild representative on a sensitive matter", baseRewardGp: 125, weight: 3 },
-
-  { text: "deliver a confession on someone else's behalf", baseRewardGp: 30, weight: 2 },
-  { text: "serve as a neutral witness for a contract", baseRewardGp: 10, weight: 2 },
-  { text: "serve as a neutral witness for a wedding", baseRewardGp: 10, weight: 2 },
-  { text: "chaperone a troublesome rich kid for the day", baseRewardGp: 150, weight: 2 },
-
+  // Roll d12. Total weight = 12.
+  { text: "mediate a dispute between two families", baseRewardGp: 100, weight: 2 },
+  { text: "deliver an apology on someone else's behalf", baseRewardGp: 25, weight: 1 },
+  { text: "collect a debt without causing physical harm", baseRewardGp: 25, weight: 1 },
+  { text: "flatter a foreign dignitary", baseRewardGp: 75, weight: 1 },
+  { text: "negotiate a truce between a guild and its workers", baseRewardGp: 125, weight: 1 },
+  { text: "act as a guild representative on a sensitive matter", baseRewardGp: 125, weight: 1 },
+  { text: "deliver a confession on someone else's behalf", baseRewardGp: 30, weight: 1 },
+  { text: "serve as a neutral witness for a contract", baseRewardGp: 10, weight: 1 },
+  { text: "serve as a neutral witness for a wedding", baseRewardGp: 10, weight: 1 },
+  { text: "chaperone a troublesome rich kid for the day", baseRewardGp: 150, weight: 1 },
   { text: "chaperone a troublesome noble guest for the day", baseRewardGp: 200, weight: 1 }
 ];
 
 const investigationContract = [
-  // TODO: Investigation Contract Area
-  { text: "infiltrate a masked ball", baseRewardGp: 150, weight: 5 },
-  { text: "assist solving a mundane crime", baseRewardGp: 100, weight: 5 },
-  { text: "follow someone without being seen", baseRewardGp: 50, weight: 5 },
-  { text: "investigate a secret meeting", baseRewardGp: 60, weight: 5 },
+  // Roll d100 (non-Kurovian total = 100). Kurovian entries add to the pool when enabled.
+  { text: "infiltrate a masked ball", baseRewardGp: 150, weight: 12 },
+  { text: "assist solving a mundane crime", baseRewardGp: 100, weight: 12 },
+  { text: "follow someone without being seen", baseRewardGp: 50, weight: 10 },
+  { text: "investigate a secret meeting", baseRewardGp: 60, weight: 10 },
+  { text: "find a missing person", baseRewardGp: 150, weight: 9 },
+  { text: "trace a stolen object through the criminal underworld", baseRewardGp: 100, weight: 8 },
+  { text: "infiltrate a hideout", baseRewardGp: 150, weight: 8 },
+  { text: "solve a murder", baseRewardGp: 300, weight: 8 },
+  { text: "assist solving a magical crime", baseRewardGp: 150, weight: 8 },
+  { text: "infiltrate a cult", baseRewardGp: 400, weight: 8 },
+  { text: "find a witness who has gone missing", baseRewardGp: 200, weight: 5 },
+  { text: "track a kidnapper before they leave the country", baseRewardGp: 400, weight: 2 },
 
-  { text: "find a missing person", baseRewardGp: 150, weight: 4 },
-  { text: "trace a stolen object through the criminal underworld", baseRewardGp: 100, weight: 4 },
-  { text: "infiltrate a hideout", baseRewardGp: 150, weight: 4 },
-
-  { text: "solve a murder", baseRewardGp: 300, weight: 3 },
-  { text: "assist solving a magical crime", baseRewardGp: 150, weight: 3 },
-
-  { text: "infiltrate a cult", baseRewardGp: 400, weight: 2 },
-  { text: "find a witness who has gone missing", baseRewardGp: 200, weight: 2 },
-
-  { text: "track a kidnapper before they leave the country", baseRewardGp: 400, weight: 1 },
-
-  // This option is only visible/rollable when Kurovian Flavour is enabled.
+  // Kurovian only (add to pool when Kurovian Flavour is enabled)
   {
     text: "work for the Ambit",
     baseRewardGp: 500,
     kurovian: true,
-    weight: 2,
+    weight: 4,
     additionalWeirdPayment: true,
     forcedTags: {
       employer: "Ambit representative"
     }
   },
-
   {
     text: "work as an blacksite Remnant operative",
     baseRewardGp: 400,
     kurovian: true,
-    weight: 1,
+    weight: 2,
     additionalWeirdPayment: true,
     forcedTags: {
       employer: "Remnant operative"
@@ -277,25 +266,21 @@ const investigationContract = [
 ];
 
 const weirdPayment = [
-  // TODO: Weird Payment Area
-  { text: "a favour from a person of power", rewardText: "a favour from a person of power", weight: 5 },
-  { text: "an uncommon magic item", rewardText: "an uncommon magic item", weight: 5 },
-
-  { text: "a piece of land", rewardText: " a piece of land", weight: 3 },
-  { text: "a rare magic item", rewardText: "a rare magic item", weight: 3 },
-
-  { text: "a custom-made weapon, armor piece, tool, or arcane focus", rewardText: "a custom-made weapon, armor piece, tool, or arcane focus", weight: 2 },
-  { text: "property in a nearby village, town or city", rewardText: "property in a nearby village, town or city", weight: 2 },
-  { text: "mayoralship of a village", rewardText: "mayoralship of a village", weight: 2 },
-  { text: "A blessing, oath, or supernatural protection", rewardText: "A blessing, oath, or supernatural protection", weight: 2 },
-  { text: "proficency training", rewardText: "proficency training", weight: 2 },
-  { text: "a very rare magic item", rewardText: "a very rare magic item", weight: 2 },
-
-  { text: "a village", rewardText: "village", weight: 1 },
+  // Roll d20 (non-Kurovian total = 20). Kurovian entry adds to the pool when enabled.
+  { text: "a favour from a person of power", rewardText: "a favour from a person of power", weight: 4 },
+  { text: "an uncommon magic item", rewardText: "an uncommon magic item", weight: 4 },
+  { text: "a piece of land", rewardText: "a piece of land", weight: 2 },
+  { text: "a rare magic item", rewardText: "a rare magic item", weight: 2 },
+  { text: "a custom-made weapon, armor piece, tool, or arcane focus", rewardText: "a custom-made weapon, armor piece, tool, or arcane focus", weight: 1 },
+  { text: "property in a nearby village, town or city", rewardText: "property in a nearby village, town or city", weight: 1 },
+  { text: "mayoralship of a village", rewardText: "mayoralship of a village", weight: 1 },
+  { text: "A blessing, oath, or supernatural protection", rewardText: "A blessing, oath, or supernatural protection", weight: 1 },
+  { text: "proficency training", rewardText: "proficency training", weight: 1 },
+  { text: "a very rare magic item", rewardText: "a very rare magic item", weight: 1 },
+  { text: "a village", rewardText: "a village", weight: 1 },
   { text: "a legendary magic item", rewardText: "a legendary magic item", weight: 1 },
 
-  // TODO: Fill in Kurovian-only weird payment option.
-  // This option is only visible/rollable when Kurovian Flavour is enabled.
+  // Kurovian only (add to pool when Kurovian Flavour is enabled)
   { text: "crystallised Axius", rewardText: "crystallised Axius", kurovian: true, weight: 1 }
 ];
 

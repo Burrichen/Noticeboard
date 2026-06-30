@@ -25,6 +25,16 @@ export function bindEvents() {
 
     const action = button.dataset.action;
 
+    if (action === "open-about") {
+      document.getElementById("aboutOverlay").classList.remove("hidden");
+      return;
+    }
+
+    if (action === "close-about") {
+      document.getElementById("aboutOverlay").classList.add("hidden");
+      return;
+    }
+
     if (action === "set-mode") {
       appState.settings.mode = button.dataset.mode;
       await saveSettings();
@@ -61,12 +71,49 @@ export function bindEvents() {
       return;
     }
 
+    if (action === "export") {
+      await exportToFile();
+      return;
+    }
+
     if (action === "choice") {
       await handleChoice(button.dataset.choiceAction, Number.parseInt(button.dataset.index, 10));
     }
   });
 
+  // Close about overlay when clicking the backdrop
+  document.getElementById("aboutOverlay").addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      event.currentTarget.classList.add("hidden");
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
+    // About overlay takes over — only Esc passes through (to close it)
+    const overlay = document.getElementById("aboutOverlay");
+    if (overlay && !overlay.classList.contains("hidden")) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        overlay.classList.add("hidden");
+      }
+      return;
+    }
+
+    // Esc and R work at any stage (not just during a choice panel)
+    if (event.key === "Escape") {
+      event.preventDefault();
+      skipToResults();
+      return;
+    }
+
+    if ((event.key === "r" || event.key === "R") &&
+        event.target.tagName !== "INPUT" &&
+        event.target.tagName !== "TEXTAREA") {
+      event.preventDefault();
+      completeRemainingAutomatically();
+      return;
+    }
+
     if (appState.activeChoice === null) {
       return;
     }
@@ -113,8 +160,12 @@ export function bindEvents() {
 
     if (event.key === "Backspace") {
       event.preventDefault();
-      appState.typedNumber = appState.typedNumber.slice(0, -1);
-      renderStage();
+      if (appState.typedNumber !== "") {
+        appState.typedNumber = appState.typedNumber.slice(0, -1);
+        renderStage();
+      } else {
+        goBack();
+      }
       return;
     }
 
@@ -149,6 +200,203 @@ export function bindEvents() {
       renderStage();
     }
   });
+}
+
+function goBack() {
+  const stage = appState.stage;
+
+  if (stage === "home" || stage === "result") {
+    return;
+  }
+
+  if (stage === "quality") {
+    appState.board = newBoard();
+    appState.stage = "home";
+    render();
+    return;
+  }
+
+  if (stage === "size") {
+    appState.board.quality = null;
+    appState.stage = "quality";
+    render();
+    return;
+  }
+
+  if (stage === "noticeCount") {
+    appState.board.size = null;
+    appState.stage = "size";
+    render();
+    return;
+  }
+
+  if (stage === "contractType") {
+    if (appState.board.notices.length === 0) {
+      appState.board.noticeCount = null;
+      appState.board.currentNoticeNumber = 1;
+      appState.stage = "noticeCount";
+    } else {
+      appState.board.notices.pop();
+      appState.board.currentNoticeNumber -= 1;
+    }
+    render();
+    return;
+  }
+
+  if (stage === "legitimateSeed" || stage === "illegitimateSeed") {
+    appState.board.pendingNotice = null;
+    appState.stage = "contractType";
+    render();
+    return;
+  }
+
+  if (stage === "legitimateTag" || stage === "legitimateAdditionalWeirdPayment") {
+    appState.board.pendingLegitimate = null;
+    appState.stage = "legitimateSeed";
+    render();
+    return;
+  }
+
+  if (stage === "illegitimateBase") {
+    appState.board.pendingIllegitimate = null;
+    appState.stage = "illegitimateSeed";
+    render();
+    return;
+  }
+
+  if (stage === "illegitimateTag" || stage === "illegitimateAdditionalWeirdPayment") {
+    const pending = appState.board.pendingIllegitimate;
+    pending.contractTagKey = null;
+    pending.tagKeys = [];
+    pending.tagIndex = 0;
+    pending.tags = {};
+    appState.stage = "illegitimateBase";
+    render();
+    return;
+  }
+}
+
+function skipToResults() {
+  if (appState.board.quality === null) {
+    resetGenerator();
+    return;
+  }
+
+  appState.board.pendingNotice = null;
+  appState.board.pendingLegitimate = null;
+  appState.board.pendingIllegitimate = null;
+  appState.exportMessage = null;
+  appState.stage = "result";
+  renderStage();
+}
+
+async function completeRemainingAutomatically() {
+  if (appState.stage === "result") {
+    return;
+  }
+
+  // Complete any missing board setup
+  if (appState.board.quality === null) {
+    appState.board.quality = getMasterTableResult(appState.data.qualityTable, rollDie(10));
+  }
+
+  if (appState.board.size === null) {
+    appState.board.size = getMasterTableResult(appState.data.sizeTable, rollDie(10));
+  }
+
+  if (appState.board.noticeCount === null) {
+    appState.board.noticeCount = rollDice(appState.board.size.contractDice).total;
+    appState.board.currentNoticeNumber = 1;
+  }
+
+  // Complete any pending notice
+  if (appState.board.pendingNotice !== null) {
+    if (appState.board.pendingNotice.outcome === "Legitimate") {
+      let seed, tags;
+
+      if (appState.board.pendingLegitimate === null) {
+        seed = rollLegitimateSeed();
+        tags = chooseLegitimateTagsAutomaticallyForSeed(seed);
+      } else {
+        const pending = appState.board.pendingLegitimate;
+        seed = pending.seed;
+
+        while (pending.tagIndex < pending.seed.tagKeys.length) {
+          const tagKey = pending.seed.tagKeys[pending.tagIndex];
+          if (pending.tags[tagKey] === undefined) {
+            const entry = chooseTagAutomatically(tagKey);
+            pending.tags[tagKey] = entry;
+            applyForcedTagsToSelection(pending.tags, entry);
+          }
+          pending.tagIndex += 1;
+          advancePendingLegitimateTagIndex(pending);
+        }
+
+        if (shouldAddAdditionalWeirdPayment(seed, pending.tags) && pending.tags.weirdPayment === undefined) {
+          pending.tags.weirdPayment = chooseTagAutomatically("weirdPayment");
+        }
+
+        tags = pending.tags;
+      }
+
+      const contract = await buildLegitimateContract(seed, tags);
+      appState.board.notices.push({ ...appState.board.pendingNotice, legitimateContract: contract });
+    } else if (appState.board.pendingNotice.outcome === "Illegitimate") {
+      let seed, contractTagKey, tags;
+
+      if (appState.board.pendingIllegitimate === null) {
+        seed = rollIllegitimateSeed();
+        const result = chooseIllegitimateTagsAutomaticallyForSeed(seed);
+        contractTagKey = result.contractTagKey;
+        tags = result.tags;
+      } else {
+        const pending = appState.board.pendingIllegitimate;
+        seed = pending.seed;
+
+        if (pending.contractTagKey === null) {
+          pending.contractTagKey = seed.contractTagOptions[rollDie(seed.contractTagOptions.length) - 1];
+          pending.tagKeys = [pending.contractTagKey, seed.extraTagKey];
+          pending.tagIndex = 0;
+        }
+
+        while (pending.tagIndex < pending.tagKeys.length) {
+          const tagKey = pending.tagKeys[pending.tagIndex];
+          if (pending.tags[tagKey] === undefined) {
+            const entry = chooseTagAutomatically(tagKey);
+            pending.tags[tagKey] = entry;
+            applyForcedTagsToSelection(pending.tags, entry);
+          }
+          pending.tagIndex += 1;
+          advancePendingIllegitimateTagIndex(pending);
+        }
+
+        if (shouldAddAdditionalWeirdPayment(seed, pending.tags) && pending.tags.weirdPayment === undefined) {
+          pending.tags.weirdPayment = chooseTagAutomatically("weirdPayment");
+        }
+
+        contractTagKey = pending.contractTagKey;
+        tags = pending.tags;
+      }
+
+      const contract = await buildIllegitimateContract(seed, contractTagKey, tags);
+      appState.board.notices.push({ ...appState.board.pendingNotice, illegitimateContract: contract });
+    }
+
+    appState.board.pendingNotice = null;
+    appState.board.pendingLegitimate = null;
+    appState.board.pendingIllegitimate = null;
+    appState.board.currentNoticeNumber += 1;
+  }
+
+  // Generate all remaining notices
+  while (appState.board.currentNoticeNumber <= appState.board.noticeCount) {
+    appState.board.notices.push(await generateAutomaticNotice(appState.board.currentNoticeNumber));
+    appState.board.currentNoticeNumber += 1;
+  }
+
+  appState.exportMessage = null;
+  appState.stage = "result";
+  render();
 }
 
 async function reloadData() {
@@ -202,11 +450,6 @@ async function handleChoice(action, index) {
 
   if (action === "choose-count") {
     chooseNoticeCount(item.value);
-    return;
-  }
-
-  if (action === "choose-notice-kind") {
-    chooseNoticeKind(item.value);
     return;
   }
 
@@ -274,20 +517,6 @@ function chooseSize(sizeId) {
 function chooseNoticeCount(count) {
   appState.board.noticeCount = count;
   appState.board.currentNoticeNumber = 1;
-  appState.stage = "noticeKind";
-  render();
-}
-
-function chooseNoticeKind(kind) {
-  if (kind === "note") {
-    appState.board.notices.push({
-      number: appState.board.currentNoticeNumber,
-      outcome: "World-building Note"
-    });
-    advanceManualNotice();
-    return;
-  }
-
   appState.stage = "contractType";
   render();
 }
@@ -537,7 +766,7 @@ function advanceManualNotice() {
 
   appState.stage = appState.board.currentNoticeNumber > appState.board.noticeCount
     ? "result"
-    : "noticeKind";
+    : "contractType";
 
   render();
 }
@@ -545,12 +774,6 @@ function advanceManualNotice() {
 function runSemiAutomaticUntilChoiceNeeded() {
   while (appState.board.currentNoticeNumber <= appState.board.noticeCount) {
     const number = appState.board.currentNoticeNumber;
-
-    if (rollDie(100) <= appState.board.size.noteChancePercent) {
-      appState.board.notices.push({ number, outcome: "World-building Note" });
-      appState.board.currentNoticeNumber += 1;
-      continue;
-    }
 
     const contractType = rollOnPercentTable(appState.board.quality.contractTypeTable, rollDie(100));
 
@@ -587,10 +810,6 @@ async function generateAutomaticBoard() {
 }
 
 async function generateAutomaticNotice(number) {
-  if (rollDie(100) <= appState.board.size.noteChancePercent) {
-    return { number, outcome: "World-building Note" };
-  }
-
   const contractType = rollOnPercentTable(appState.board.quality.contractTypeTable, rollDie(100));
 
   if (contractType === "Legitimate") {
@@ -757,6 +976,26 @@ async function buildIllegitimateContract(seed, contractTagKey, tags) {
     tags,
     kurovianFlavour: appState.settings.kurovianFlavour
   });
+}
+
+async function exportToFile() {
+  const result = {
+    quality: appState.board.quality,
+    size: appState.board.size,
+    mode: appState.settings.mode,
+    kurovianFlavour: appState.settings.kurovianFlavour,
+    noticeCount: appState.board.noticeCount,
+    notices: appState.board.notices
+  };
+
+  try {
+    const filepath = await window.noticeboardAPI.exportNoticeboard(result);
+    appState.exportMessage = `Saved: ${filepath}`;
+  } catch (err) {
+    appState.exportMessage = `Export failed: ${err.message}`;
+  }
+
+  renderStage();
 }
 
 async function saveSettings() {

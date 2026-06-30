@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld("noticeboardAPI", {
   getSettings: () => ipcRenderer.invoke("noticeboard:get-settings"),
   saveSettings: (settings) => ipcRenderer.invoke("noticeboard:save-settings", settings),
   buildLegitimateContract: (payload) => ipcRenderer.invoke("noticeboard:build-legitimate", payload),
-  buildIllegitimateContract: (payload) => ipcRenderer.invoke("noticeboard:build-illegitimate", payload)
+  buildIllegitimateContract: (payload) => ipcRenderer.invoke("noticeboard:build-illegitimate", payload),
+  exportNoticeboard: (payload) => ipcRenderer.invoke("noticeboard:export", payload)
 });

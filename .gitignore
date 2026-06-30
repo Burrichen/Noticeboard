@@ -7,3 +7,4 @@ release/
 settings.json
 npm-debug.log*
 .dev-notes/
+noticeboards/

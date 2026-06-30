@@ -1,4 +1,4 @@
-const { chooseFromList } = require("./input");
+const { chooseFromList, GoBackError, SkipToResultsError } = require("./input");
 const { QUALITY_TABLE, SIZE_TABLE } = require("./tables");
 const style = require("./style");
 const { generateLegitimateContract, validateLegitimateTables } = require("./legitimateContracts");
@@ -32,19 +32,59 @@ async function generateNoticeboard(mode, options = {}) {
     kurovianFlavour: options.kurovianFlavour === true
   };
 
-  const qualityChoice = await chooseQuality(mode);
-  const sizeChoice = await chooseSize(mode);
-  const noticeCountChoice = await chooseNoticeCount(sizeChoice.option, mode);
-
+  let qualityChoice = null;
+  let sizeChoice = null;
+  let noticeCountChoice = null;
   const notices = [];
 
-  for (let i = 1; i <= noticeCountChoice.count; i += 1) {
-    const notice =
-      mode === "manual"
-        ? await generateNoticeManually(i, qualityChoice.option, sizeChoice.option, mode, generatorOptions)
-        : await generateNoticeAutomatically(i, qualityChoice.option, sizeChoice.option, mode, generatorOptions);
+  // State machine: each state is one "step". GoBack transitions to the prior state;
+  // SkipToResults (Esc) finalises generation with whatever notices were completed.
+  let state = "quality";
 
-    notices.push(notice);
+  while (state !== "done") {
+    try {
+      if (state === "quality") {
+        qualityChoice = await chooseQuality(mode);
+        state = "size";
+      } else if (state === "size") {
+        sizeChoice = await chooseSize(mode);
+        state = "noticeCount";
+      } else if (state === "noticeCount") {
+        noticeCountChoice = await chooseNoticeCount(sizeChoice.option, mode);
+        state = "notices";
+      } else if (state === "notices") {
+        const noticeNumber = notices.length + 1;
+
+        if (noticeNumber > noticeCountChoice.count) {
+          state = "done";
+        } else {
+          const notice =
+            mode === "manual"
+              ? await generateNoticeManually(noticeNumber, qualityChoice.option, sizeChoice.option, mode, generatorOptions)
+              : await generateNoticeAutomatically(noticeNumber, qualityChoice.option, sizeChoice.option, mode, generatorOptions);
+
+          notices.push(notice);
+        }
+      }
+    } catch (e) {
+      if (e instanceof SkipToResultsError) {
+        if (state !== "notices") throw e; // Nothing useful yet — let caller handle
+        state = "done";
+        continue;
+      }
+
+      if (e instanceof GoBackError) {
+        if (state === "quality") continue; // Already at start — redo quality
+        if (state === "size") { state = "quality"; continue; }
+        if (state === "noticeCount") { state = "size"; continue; }
+        if (state === "notices") {
+          if (notices.length === 0) { state = "noticeCount"; } else { notices.pop(); }
+          continue;
+        }
+      }
+
+      throw e;
+    }
   }
 
   return {
@@ -170,16 +210,6 @@ async function chooseNoticeCount(size, mode) {
 }
 
 async function generateNoticeAutomatically(number, quality, size, mode, options) {
-  const noteRoll = rollDie(100);
-
-  if (noteRoll <= size.noteChancePercent) {
-    return {
-      number,
-      outcome: "World-building Note",
-      noteRoll: `d100 = ${noteRoll}`
-    };
-  }
-
   const contractTypeRoll = rollDie(100);
   const contractType = rollOnPercentTable(quality.contractTypeTable, contractTypeRoll);
 
@@ -201,7 +231,6 @@ async function generateNoticeAutomatically(number, quality, size, mode, options)
   return {
     number,
     outcome: contractType,
-    noteRoll: `d100 = ${noteRoll}`,
     contractTypeRoll: `d100 = ${contractTypeRoll}`,
     legitimateContract,
     illegitimateContract,
@@ -210,66 +239,41 @@ async function generateNoticeAutomatically(number, quality, size, mode, options)
 }
 
 async function generateNoticeManually(number, quality, size, mode, options) {
-  const noteChoice = await chooseNoteOrContract(number);
+  while (true) {
+    // GoBack from chooseContractType propagates up to the state machine (back to previous notice).
+    const contractChoice = await chooseContractType(number);
 
-  if (noteChoice.isNote) {
-    return {
-      number,
-      outcome: "World-building Note",
-      noteRoll: noteChoice.rollText
-    };
-  }
+    try {
+      const legitimateContract =
+        contractChoice.contractType === "Legitimate"
+          ? await generateLegitimateContract(mode, options)
+          : undefined;
 
-  const contractChoice = await chooseContractType(number);
+      const illegitimateContract =
+        contractChoice.contractType === "Illegitimate"
+          ? await generateIllegitimateContract(mode, options)
+          : undefined;
 
-  const legitimateContract =
-    contractChoice.contractType === "Legitimate"
-      ? await generateLegitimateContract(mode, options)
-      : undefined;
+      const illegalContract =
+        contractChoice.contractType === "Illegal"
+          ? await generateIllegalContract(mode, options)
+          : undefined;
 
-  const illegitimateContract =
-    contractChoice.contractType === "Illegitimate"
-      ? await generateIllegitimateContract(mode, options)
-      : undefined;
-
-  const illegalContract =
-    contractChoice.contractType === "Illegal"
-      ? await generateIllegalContract(mode, options)
-      : undefined;
-
-  return {
-    number,
-    outcome: contractChoice.contractType,
-    noteRoll: noteChoice.rollText,
-    contractTypeRoll: contractChoice.rollText,
-    legitimateContract,
-    illegitimateContract,
-    illegalContract
-  };
-}
-
-async function chooseNoteOrContract(number) {
-  const choice = await chooseFromList({
-    title: `Notice ${number}`,
-    prompt: "Choose notice type",
-    items: [
-      {
-        label: "World-building Note",
-        description: "A piece of lore, rumour, news, warning, or city flavour.",
-        colour: style.colours.cursedViolet
-      },
-      {
-        label: "Contract",
-        description: "A job or request that can lead to an adventure.",
-        colour: style.colours.oldBone
+      return {
+        number,
+        outcome: contractChoice.contractType,
+        contractTypeRoll: contractChoice.rollText,
+        legitimateContract,
+        illegitimateContract,
+        illegalContract
+      };
+    } catch (e) {
+      if (e instanceof GoBackError) {
+        continue; // Back from inside a contract → redo contract type for this notice
       }
-    ]
-  });
-
-  return {
-    isNote: choice === 1,
-    rollText: "manual selection"
-  };
+      throw e;
+    }
+  }
 }
 
 async function chooseContractType(number) {

@@ -76,28 +76,6 @@ export function renderStage() {
     return;
   }
 
-  if (appState.stage === "noticeKind") {
-    renderChoiceStage({
-      title: `Notice ${appState.board.currentNoticeNumber}`,
-      copy: "Manual mode: choose what this posting is.",
-      action: "choose-notice-kind",
-      items: [
-        {
-          label: "World-building Note",
-          description: "A rumour, warning, lore fragment, announcement, or city detail.",
-          value: "note",
-          colourClass: "note"
-        },
-        {
-          label: "Contract",
-          description: "A job, request, commission, or adventure hook.",
-          value: "contract"
-        }
-      ]
-    });
-    return;
-  }
-
   if (appState.stage === "contractType") {
     renderChoiceStage({
       title: `Notice ${appState.board.currentNoticeNumber} Contract Type`,
@@ -263,7 +241,9 @@ export function renderStage() {
         <h2 class="stage-title">The board is complete.</h2>
         <p class="stage-copy">Review the generated notices on the right, or generate another board.</p>
         <div class="divider"></div>
-        <button class="primary-button" data-action="start">Generate Another Board</button>
+        <button class="primary-button" data-action="export">Export to File</button>
+        <button class="secondary-button" data-action="start">Generate Another Board</button>
+        ${appState.exportMessage ? `<p class="export-status">${escapeHtml(appState.exportMessage)}</p>` : ""}
       </div>
     `;
   }
@@ -361,6 +341,10 @@ function renderSettings() {
         Use <span class="kbd">npm start</span> to open your saved preference.<br>
         Use <span class="kbd">npm run cli</span> or <span class="kbd">npm run desktop</span> to force one version.
       </p>
+    </div>
+
+    <div class="setting-block">
+      <button class="about-button" data-action="open-about">About &amp; Shortcuts</button>
     </div>
   `;
 }
@@ -484,6 +468,7 @@ function renderNoticeCard(notice) {
 
       ${notice.legitimateContract ? renderGeneratedContract(notice.legitimateContract) : ""}
       ${notice.illegitimateContract ? renderGeneratedContract(notice.illegitimateContract) : ""}
+      ${notice.illegalContract ? renderGeneratedContract(notice.illegalContract) : ""}
     </div>
   `;
 }
@@ -760,7 +745,7 @@ function formatInterfaceMode(interfaceMode) {
 }
 
 function formatNoticeOutcome(outcome) {
-  return outcome === "World-building Note" ? "World-building Note" : `${outcome} Contract`;
+  return `${outcome} Contract`;
 }
 
 function getNoticeTypeClass(outcome) {
@@ -774,10 +759,6 @@ function getNoticeTypeClass(outcome) {
 
   if (outcome === "Legitimate") {
     return "legitimate";
-  }
-
-  if (outcome === "World-building Note") {
-    return "note";
   }
 
   return "";
@@ -816,9 +797,9 @@ function getSizeClass(id) {
 }
 
 function getChoiceInstruction(count) {
-  if (count <= 9) {
-    return `Use <strong>↑ / ↓</strong> and <strong>Enter</strong>, click a card, or press a number key.`;
-  }
+  const nav = count <= 9
+    ? `Use <strong>↑ / ↓</strong> + <strong>Enter</strong>, click a card, or press a number key.`
+    : `Use <strong>↑ / ↓</strong> + <strong>Enter</strong>, click, or type a number then <strong>Enter</strong>.`;
 
-  return `Use <strong>↑ / ↓</strong> and <strong>Enter</strong>, click a card, or type a full number then press <strong>Enter</strong>.`;
+  return `${nav}<br><span style="color:var(--ash-dark);font-size:0.88em"><strong style="color:var(--ash)">Esc</strong> skip to results &nbsp;•&nbsp; <strong style="color:var(--ash)">←</strong> go back &nbsp;•&nbsp; <strong style="color:var(--ash)">R</strong> auto-roll rest</span>`;
 }

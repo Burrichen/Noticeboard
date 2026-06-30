@@ -17,29 +17,29 @@
 
 const isolatedLocation = [
   // Used by: "carry supplies to an isolated {isolatedLocation}"
-  // TODO: Isolated Location Area
-  { text: "house", weight: 10 },
-  { text: "farm", weight: 10 },
-  { text: "outpost", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "house", weight: 2 },
+  { text: "farm", weight: 2 },
+  { text: "outpost", weight: 2 }
 ];
 
 const hauntedLocation = [
   // Used by: "exorcise a ghost from {hauntedLocation}"
   // Note: articles (a/an) are included in each entry.
-  // TODO: Haunted Location Area
-  { text: "a home", weight: 10 },
-  { text: "a graveyard", weight: 10 },
-  { text: "a shrine", weight: 10 },
-  { text: "an inn", weight: 10 }
+  // Roll d4. Total weight = 4 (equal).
+  { text: "a home", weight: 1 },
+  { text: "a graveyard", weight: 1 },
+  { text: "a shrine", weight: 1 },
+  { text: "an inn", weight: 1 }
 ];
 
 const protectedLocation = [
   // Used by: "protect {protectedLocation} from incoming attack"
   // Note: articles (a/an) are included in each entry.
-  // TODO: Protected Location Area
-  { text: "a caravan", weight: 10 },
-  { text: "a farm", weight: 10 },
-  { text: "an outpost", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "a caravan", weight: 2 },
+  { text: "a farm", weight: 2 },
+  { text: "an outpost", weight: 2 }
 ];
 
 // -----------------------------------------------------------------------------
@@ -48,18 +48,18 @@ const protectedLocation = [
 
 const strandedVehicle = [
   // Used by: "retrieve a {strandedVehicle} stranded off-route"
-  // TODO: Stranded Vehicle Area
-  { text: "wagon", weight: 10 },
-  { text: "cart", weight: 10 },
-  { text: "boat", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "wagon", weight: 2 },
+  { text: "cart", weight: 2 },
+  { text: "boat", weight: 2 }
 ];
 
 const cursedThing = [
   // Used by: "destroy a cursed {cursedThing}"
-  // TODO: Cursed Thing Area
-  { text: "object", weight: 10 },
-  { text: "relic", weight: 10 },
-  { text: "shrine", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "object", weight: 2 },
+  { text: "relic", weight: 2 },
+  { text: "shrine", weight: 2 }
 ];
 
 // -----------------------------------------------------------------------------
@@ -68,18 +68,18 @@ const cursedThing = [
 
 const dislikedFigure = [
   // Used by: "escort a disliked {dislikedFigure} through town"
-  // TODO: Disliked Figure Area
-  { text: "official", weight: 10 },
-  { text: "collector", weight: 10 },
-  { text: "guild agent", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "official", weight: 2 },
+  { text: "collector", weight: 2 },
+  { text: "guild agent", weight: 2 }
 ];
 
 const cursedSubject = [
   // Used by: "investigate and end a curse affecting a {cursedSubject}"
-  // TODO: Cursed Subject Area
-  { text: "person", weight: 10 },
-  { text: "family", weight: 10 },
-  { text: "place", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "person", weight: 2 },
+  { text: "family", weight: 2 },
+  { text: "place", weight: 2 }
 ];
 
 // -----------------------------------------------------------------------------
@@ -88,10 +88,29 @@ const cursedSubject = [
 
 const guardedEvent = [
   // Used by: "guard a {guardedEvent} from hostile forces"
-  // TODO: Guarded Event Area
-  { text: "ritual", weight: 10 },
-  { text: "burial", weight: 10 },
-  { text: "ceremony", weight: 10 }
+  // Roll d6. Total weight = 6 (equal).
+  { text: "ritual", weight: 2 },
+  { text: "burial", weight: 2 },
+  { text: "ceremony", weight: 2 }
+];
+
+// -----------------------------------------------------------------------------
+// JOB SUB-TABLES
+// -----------------------------------------------------------------------------
+
+const job = [
+  // Used by: "work at a {job}"
+  // Roll d10. Total weight = 10 (equal).
+  { text: "lumber mill", weight: 1 },
+  { text: "mine", weight: 1 },
+  { text: "repair work", weight: 1 },
+  { text: "cargo lifting", weight: 1 },
+  { text: "farm", weight: 1 },
+  { text: "forge", weight: 1 },
+  { text: "tavern", weight: 1 },
+  { text: "bakery", weight: 1 },
+  { text: "courier service", weight: 1 },
+  { text: "cleaners service", weight: 1 }
 ];
 
 // -----------------------------------------------------------------------------
@@ -100,15 +119,16 @@ const guardedEvent = [
 
 const paymentCondition = [
   // Used by: "the payment is {paymentCondition}"
-  // TODO: Payment Condition Area
-  { text: "fake", weight: 10 },
-  { text: "stolen", weight: 10 },
-  { text: "cursed", weight: 3 }
+  // Roll d6. Total weight = 6.
+  { text: "fake", weight: 3 },
+  { text: "stolen", weight: 2 },
+  { text: "cursed", weight: 1 }
 ];
 
 // -----------------------------------------------------------------------------
 
 const SUB_TABLES = {
+  job,
   isolatedLocation,
   hauntedLocation,
   protectedLocation,
@@ -121,6 +141,7 @@ const SUB_TABLES = {
 };
 
 const SUB_TABLE_LABELS = {
+  job: "Job",
   isolatedLocation: "Isolated Location",
   hauntedLocation: "Haunted Location",
   protectedLocation: "Protected Location",
@@ -135,6 +156,7 @@ const SUB_TABLE_LABELS = {
 module.exports = {
   SUB_TABLES,
   SUB_TABLE_LABELS,
+  job,
   isolatedLocation,
   hauntedLocation,
   protectedLocation,

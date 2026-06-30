@@ -56,36 +56,31 @@ const SIZE_TABLE = [
     id: 1,
     name: "Tiny",
     description: "A tiny noticeboard with only a handful of notices.",
-    contractDice: { numberOfDice: 1, sides: 4, modifier: 0 },
-    noteChancePercent: 25
+    contractDice: { numberOfDice: 1, sides: 4, modifier: 0 }
   },
   {
     id: 2,
     name: "Small",
     description: "A small noticeboard with a modest number of notices.",
-    contractDice: { numberOfDice: 2, sides: 4, modifier: 0 },
-    noteChancePercent: 25
+    contractDice: { numberOfDice: 2, sides: 4, modifier: 0 }
   },
   {
     id: 3,
     name: "Average",
     description: "A typical noticeboard with a decent spread of notices.",
-    contractDice: { numberOfDice: 3, sides: 4, modifier: -1 },
-    noteChancePercent: 25
+    contractDice: { numberOfDice: 3, sides: 4, modifier: -1 }
   },
   {
     id: 4,
     name: "Large",
     description: "A large noticeboard with many available notices.",
-    contractDice: { numberOfDice: 4, sides: 4, modifier: 0 },
-    noteChancePercent: 25
+    contractDice: { numberOfDice: 4, sides: 4, modifier: 0 }
   },
   {
     id: 5,
     name: "Enormous",
     description: "An enormous noticeboard packed with notices.",
-    contractDice: { numberOfDice: 5, sides: 4, modifier: -1 },
-    noteChancePercent: 25
+    contractDice: { numberOfDice: 5, sides: 4, modifier: -1 }
   }
 ];
 

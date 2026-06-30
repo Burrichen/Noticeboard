@@ -43,6 +43,11 @@ app.whenReady().then(() => {
     return buildIllegitimateContractFromTags(seed, contractTagKey, tags, kurovianFlavour);
   });
 
+  ipcMain.handle("noticeboard:export", (_event, result) => {
+    const { exportNoticeboard } = require("../src/exporter");
+    return exportNoticeboard(result);
+  });
+
   createWindow();
 
   app.on("activate", () => {

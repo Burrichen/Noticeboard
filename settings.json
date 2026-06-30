@@ -1,5 +1,5 @@
 {
-  "mode": "automatic",
+  "mode": "manual",
   "kurovianFlavour": true,
   "interfaceMode": "gui"
 }
