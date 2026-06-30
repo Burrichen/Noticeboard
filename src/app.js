@@ -151,6 +151,10 @@ function printNoticeboardResult(result) {
     if (notice.illegitimateContract !== undefined) {
       printGeneratedContract(notice.illegitimateContract);
     }
+
+    if (notice.illegalContract !== undefined) {
+      printGeneratedContract(notice.illegalContract);
+    }
   }
 
   console.log("");

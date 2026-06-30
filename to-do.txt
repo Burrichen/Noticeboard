@@ -2,3 +2,5 @@
 To do
 
 Make all tables reach 100% when done
+
+hunt a creature that only appears under a specific condition (e.g. full-moon, fog) add more of these and a sub-table

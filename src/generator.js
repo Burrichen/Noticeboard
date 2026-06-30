@@ -3,6 +3,7 @@ const { QUALITY_TABLE, SIZE_TABLE } = require("./tables");
 const style = require("./style");
 const { generateLegitimateContract, validateLegitimateTables } = require("./legitimateContracts");
 const { generateIllegitimateContract, validateIllegitimateTables } = require("./illegitimateContracts");
+const { generateIllegalContract, validateIllegalTables } = require("./illegalContracts");
 const {
   formatDiceFormula,
   getDiceMaximum,
@@ -21,6 +22,7 @@ function validateTables() {
 
   validateLegitimateTables();
   validateIllegitimateTables();
+  validateIllegalTables();
 }
 
 async function generateNoticeboard(mode, options = {}) {
@@ -191,13 +193,19 @@ async function generateNoticeAutomatically(number, quality, size, mode, options)
       ? await generateIllegitimateContract(mode, options)
       : undefined;
 
+  const illegalContract =
+    contractType === "Illegal"
+      ? await generateIllegalContract(mode, options)
+      : undefined;
+
   return {
     number,
     outcome: contractType,
     noteRoll: `d100 = ${noteRoll}`,
     contractTypeRoll: `d100 = ${contractTypeRoll}`,
     legitimateContract,
-    illegitimateContract
+    illegitimateContract,
+    illegalContract
   };
 }
 
@@ -224,13 +232,19 @@ async function generateNoticeManually(number, quality, size, mode, options) {
       ? await generateIllegitimateContract(mode, options)
       : undefined;
 
+  const illegalContract =
+    contractChoice.contractType === "Illegal"
+      ? await generateIllegalContract(mode, options)
+      : undefined;
+
   return {
     number,
     outcome: contractChoice.contractType,
     noteRoll: noteChoice.rollText,
     contractTypeRoll: contractChoice.rollText,
     legitimateContract,
-    illegitimateContract
+    illegitimateContract,
+    illegalContract
   };
 }
 

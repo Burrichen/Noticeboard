@@ -9,11 +9,13 @@ const {
   normaliseTagText,
   asSubject,
   asAction,
+  resolveContractText,
   getWeirdPaymentText,
   getRewardModifier,
   shouldAddAdditionalWeirdPayment,
   getForcedTagsText
 } = require("./tagUtils");
+const { SUB_TABLES, SUB_TABLE_LABELS } = require("./subTables");
 
 const {
   TAG_TABLES: LEGITIMATE_TAG_TABLES,
@@ -84,7 +86,7 @@ const betrayal = [
   { text: "the party is locked in, trapped or abandoned during the job", rewardModifierPercent: 0, weight: 2 },
 
   { text: "the job is an ambush", rewardModifierPercent: 0, weight: 1 },
-  { text: "the payment is fake, stolen or cursed", rewardModifierPercent: 50, weight: 1 },
+  { text: "the payment is {paymentCondition}", rewardModifierPercent: 50, weight: 1, subTableKey: "paymentCondition" },
   { text: "the party is paid, but accepting payment implicates them", rewardModifierPercent: 10, weight: 1 }
 ];
 
@@ -121,6 +123,7 @@ async function generateIllegitimateContract(mode, options = {}) {
       : chooseTagAutomatically(contractTagKey, kurovianFlavour);
 
   applyForcedTags(selectedTags, selectedTags[contractTagKey], kurovianFlavour);
+  await applySubTable(selectedTags, selectedTags[contractTagKey], mode, kurovianFlavour);
 
   selectedTags[seed.extraTagKey] =
     mode === "manual"
@@ -128,6 +131,7 @@ async function generateIllegitimateContract(mode, options = {}) {
       : chooseTagAutomatically(seed.extraTagKey, kurovianFlavour);
 
   applyForcedTags(selectedTags, selectedTags[seed.extraTagKey], kurovianFlavour);
+  await applySubTable(selectedTags, selectedTags[seed.extraTagKey], mode, kurovianFlavour);
 
   if (shouldAddAdditionalWeirdPayment(seed, selectedTags)) {
     selectedTags.weirdPayment =
@@ -266,6 +270,10 @@ function getTagTable(tagKey) {
     return ILLEGITIMATE_TAG_TABLES[tagKey];
   }
 
+  if (SUB_TABLES[tagKey] !== undefined) {
+    return SUB_TABLES[tagKey];
+  }
+
   if (LEGITIMATE_TAG_TABLES[tagKey] !== undefined) {
     return LEGITIMATE_TAG_TABLES[tagKey];
   }
@@ -276,9 +284,24 @@ function getTagTable(tagKey) {
 function getTagLabel(tagKey) {
   return (
     ILLEGITIMATE_TAG_LABELS[tagKey] ??
+    SUB_TABLE_LABELS[tagKey] ??
     LEGITIMATE_TAG_LABELS[tagKey] ??
     tagKey
   );
+}
+
+async function applySubTable(selectedTags, sourceEntry, mode, kurovianFlavour) {
+  if (sourceEntry.subTableKey === undefined) {
+    return;
+  }
+  const subKey = sourceEntry.subTableKey;
+  if (selectedTags[subKey] !== undefined) {
+    return;
+  }
+  selectedTags[subKey] =
+    mode === "manual"
+      ? await chooseTagManually(subKey, kurovianFlavour)
+      : chooseTagAutomatically(subKey, kurovianFlavour);
 }
 
 function applyForcedTags(selectedTags, sourceEntry, kurovianFlavour) {
@@ -356,7 +379,7 @@ function buildIllegitimateSentence(seed, contractTagKey, tags) {
   }
 
   if (seed.name === "Illegitimate Betrayal") {
-    return `${subject} asks for people to ${contractText}, but ${asAction(tags.betrayal, "betrayal")}.`;
+    return `${subject} asks for people to ${contractText}, but ${resolveContractText(tags.betrayal, tags)}.`;
   }
 
   return `${subject} posts an illegitimate contract.`;

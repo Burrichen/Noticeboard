@@ -10,11 +10,13 @@ const {
   normaliseTagText,
   asSubject,
   asAction,
+  resolveContractText,
   getWeirdPaymentText,
   getRewardModifier,
   shouldAddAdditionalWeirdPayment,
   getForcedTagsText
 } = require("./tagUtils");
+const { SUB_TABLES, SUB_TABLE_LABELS } = require("./subTables");
 
 const REWARD_DRIFT_RANGE_PERCENT = 15;
 
@@ -123,10 +125,10 @@ const contract = [
   { text: "deliver an object of importance", baseRewardGp: 50, weight: 10 },
   { text: "guard a location overnight", baseRewardGp: 20, weight: 10 },
   { text: "escort a caravan", baseRewardGp: 40, weight: 10 },
-  { text: "carry supplies to an isolated house, farm or outpost", baseRewardGp: 20, weight: 5 },
+  { text: "carry supplies to an isolated {isolatedLocation}", baseRewardGp: 20, weight: 5, subTableKey: "isolatedLocation" },
   { text: "find a missing animal", baseRewardGp: 5, weight: 5 },
-  { text: "retrieve a wagon, cart or boat stranded off-route", baseRewardGp: 30, weight: 5 },
-  { text: "escort a disliked official, collector or guild agent through town", baseRewardGp: 50, weight: 1 }
+  { text: "retrieve a {strandedVehicle} stranded off-route", baseRewardGp: 30, weight: 5, subTableKey: "strandedVehicle" },
+  { text: "escort a disliked {dislikedFigure} through town", baseRewardGp: 50, weight: 1, subTableKey: "dislikedFigure" }
 ];
 
 const employer = [
@@ -186,17 +188,17 @@ const dangerousContract = [
   { text: "hunt a monster that's been attacking travellers", rewardModifierPercent: 100 },
   { text: "drive off a beast that's been threatening livestock", baseRewardGp: 100 },
   { text: "clear creatures out of an abandoned building", baseRewardGp: 100 },
-  { text: "exorcise a ghost from a home, graveyard, shrine or inn", baseRewardGp: 200 },
+  { text: "exorcise a ghost from {hauntedLocation}", baseRewardGp: 200, subTableKey: "hauntedLocation" },
   { text: "rescue someone trapped in a dangerous location", baseRewardGp: 200 },
   { text: "destroy a brood den", baseRewardGp: 125 },
-  { text: "protect a caravan, farm or outpost from incoming attack", baseRewardGp: 150 },
+  { text: "protect {protectedLocation} from incoming attack", baseRewardGp: 150, subTableKey: "protectedLocation" },
   { text: "capture a dangerous outlaw alive", baseRewardGp: 125 },
   { text: "kill a dangerous outlaw", baseRewardGp: 75 },
   { text: "recover an item from a monsters lair or haunted place", baseRewardGp: 125 },
   { text: "hunt a creature that only appears under a specific condition (e.g. full-moon, fog)", baseRewardGp: 150 },
-  { text: "guard a ritual. burial or ceremony from hostile forces", baseRewardGp: 125 },
+  { text: "guard a {guardedEvent} from hostile forces", baseRewardGp: 125, subTableKey: "guardedEvent" },
   { text: "break into a dangerous location to recover captives or proof", baseRewardGp: 300 },
-  { text: "destroy a cursed object, relic or shrine", baseRewardGp: 150 },
+  { text: "destroy a cursed {cursedThing}", baseRewardGp: 150, subTableKey: "cursedThing" },
   { text: "survive a night in a cursed or haunted location", baseRewardGp: 300 }
 ];
 
@@ -204,7 +206,7 @@ const weirdContract = [
   // TODO: Weird Contract Area
   { text: "give a ghost one last day of fun", baseRewardGp: 250, weight: 1 },
 
-  { text: "investigate and end a curse affecting a person, family, or place", baseRewardGp: 300 },
+  { text: "investigate and end a curse affecting a {cursedSubject}", baseRewardGp: 300, subTableKey: "cursedSubject" },
 
   { text: "break a supernatural bargain", baseRewardGp: 250 },
 
@@ -344,6 +346,7 @@ async function generateLegitimateContract(mode, options = {}) {
     selectedTags[tagKey] = selectedTag;
 
     applyForcedTags(selectedTags, selectedTag, kurovianFlavour);
+    await applySubTable(selectedTags, selectedTag, mode, kurovianFlavour);
   }
 
   if (shouldAddAdditionalWeirdPayment(seed, selectedTags)) {
@@ -413,7 +416,7 @@ async function chooseTagManually(tagKey, kurovianFlavour) {
   const availableEntries = getAvailableTagEntries(tagKey, kurovianFlavour);
 
   const chosenIndex = await chooseFromList({
-    title: TAG_LABELS[tagKey],
+    title: getTagLabel(tagKey),
     statusLines: kurovianFlavour
       ? [
           style.subtitle("Kurovian Flavour enabled: Kurovian-only options are available.")
@@ -439,8 +442,18 @@ function chooseTagAutomatically(tagKey, kurovianFlavour) {
   return chooseWeightedEntry(usableTable);
 }
 
+function getTagTable(tagKey) {
+  if (TAG_TABLES[tagKey] !== undefined) return TAG_TABLES[tagKey];
+  if (SUB_TABLES[tagKey] !== undefined) return SUB_TABLES[tagKey];
+  throw new Error(`Unknown tag table: ${tagKey}.`);
+}
+
+function getTagLabel(tagKey) {
+  return TAG_LABELS[tagKey] ?? SUB_TABLE_LABELS[tagKey] ?? tagKey;
+}
+
 function getAvailableTagEntries(tagKey, kurovianFlavour) {
-  const table = TAG_TABLES[tagKey];
+  const table = getTagTable(tagKey);
 
   const availableEntries = table.filter((entry) => {
     if (isKurovianEntry(entry)) {
@@ -450,10 +463,24 @@ function getAvailableTagEntries(tagKey, kurovianFlavour) {
   });
 
   if (availableEntries.length === 0) {
-    throw new Error(`${TAG_LABELS[tagKey]} has no available entries.`);
+    throw new Error(`${getTagLabel(tagKey)} has no available entries.`);
   }
 
   return availableEntries;
+}
+
+async function applySubTable(selectedTags, sourceEntry, mode, kurovianFlavour) {
+  if (sourceEntry.subTableKey === undefined) {
+    return;
+  }
+  const subKey = sourceEntry.subTableKey;
+  if (selectedTags[subKey] !== undefined) {
+    return;
+  }
+  selectedTags[subKey] =
+    mode === "manual"
+      ? await chooseTagManually(subKey, kurovianFlavour)
+      : chooseTagAutomatically(subKey, kurovianFlavour);
 }
 
 function applyForcedTags(selectedTags, sourceEntry, kurovianFlavour) {
@@ -500,8 +527,12 @@ function getTagMenuText(tagKey, entry, index) {
     markers.push("adds weird payment");
   }
 
+  if (entry.subTableKey !== undefined) {
+    markers.push(`rolls ${getTagLabel(entry.subTableKey)}`);
+  }
+
   if (entry.forcedTags !== undefined) {
-    markers.push(getForcedTagsText(entry.forcedTags, (key) => TAG_LABELS[key] ?? key));
+    markers.push(getForcedTagsText(entry.forcedTags, getTagLabel));
   }
 
   const markerText = markers.length > 0
@@ -516,24 +547,24 @@ function getTagMenuText(tagKey, entry, index) {
     return `${rewardText}${markerText}`;
   }
 
-  return `[empty ${TAG_LABELS[tagKey]} option ${index + 1}]${markerText}`;
+  return `[empty ${getTagLabel(tagKey)} option ${index + 1}]${markerText}`;
 }
 
 function buildContractSentence(seed, tags) {
   if (seed.name === "Legitimate Simple") {
-    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.contract, "contract")}.`;
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${resolveContractText(tags.contract, tags)}.`;
   }
 
   if (seed.name === "Legitimate Complicated") {
-    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.contract, "contract")}, but ${asAction(tags.externalComplication, "external complication")}.`;
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${resolveContractText(tags.contract, tags)}, but ${asAction(tags.externalComplication, "external complication")}.`;
   }
 
   if (seed.name === "Legitimate Dangerous") {
-    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.dangerousContract, "dangerous contract")}.`;
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${resolveContractText(tags.dangerousContract, tags)}.`;
   }
 
   if (seed.name === "Legitimate Weird") {
-    return `${asSubject(tags.employer, "employer")} is asking for people to ${asAction(tags.weirdContract, "weird contract")}.`;
+    return `${asSubject(tags.employer, "employer")} is asking for people to ${resolveContractText(tags.weirdContract, tags)}.`;
   }
 
   if (seed.name === "Legitimate Social") {
@@ -545,7 +576,7 @@ function buildContractSentence(seed, tags) {
   }
 
   if (seed.name === "Legitimate Weird Payment") {
-    return `A notice asks for people to ${asAction(tags.dangerousContract, "dangerous contract")}.`;
+    return `A notice asks for people to ${resolveContractText(tags.dangerousContract, tags)}.`;
   }
 
   return "A legitimate contract has been posted.";

@@ -9,6 +9,7 @@ const {
   normaliseTagText,
   asSubject,
   asAction,
+  resolveContractText,
   getWeirdPaymentText,
   getRewardModifier,
   shouldAddAdditionalWeirdPayment,
@@ -128,11 +129,10 @@ const shadyCondition = [
   // TODO: Shady Condition Area
   { text: "ensure there are no witnesses", rewardModifierPercent: 75, weight: 10 },
   { text: "in the cover of night", rewardModifierPercent: 25, weight: 10 },
-  { text: "wearing a disguse", rewardModifierPercent: 30, weight: 5 },
+  { text: "you must wear a disguse", rewardModifierPercent: 30, weight: 5 },
   { text: "do not say a word on the job", rewardModifierPercent: 50, weight: 5 },
   { text: "make it look like an accident", rewardModifierPercent: 75, weight: 10 },
   { text: "complete the job in X days", rewardModifierPercent: 30, weight: 15 },
-  { text: "do not use magic", rewardModifierPercent: 75, weight: 5 }
 ];
 
 const contraband = [
@@ -147,7 +147,7 @@ const theftLocation = [
   // TODO: Theft Location Area
   { text: "a house", weight: 10 },
   { text: "a shop", weight: 15 },
-  { text: "a guidhall", weight: 7 },
+  { text: "a guildhall", weight: 7 },
   { text: "an estate", weight: 5 }
 ];
 
@@ -402,21 +402,6 @@ async function applySubTable(selectedTags, sourceEntry, mode, kurovianFlavour) {
     mode === "manual"
       ? await chooseTagManually(subKey, kurovianFlavour)
       : chooseTagAutomatically(subKey, kurovianFlavour);
-}
-
-function resolveContractText(entry, tags) {
-  if (entry.subTableKey === undefined) {
-    return entry.text;
-  }
-  const subEntry = tags[entry.subTableKey];
-  if (subEntry === undefined) {
-    return entry.text;
-  }
-  const subText = getCleanText(subEntry.text);
-  return entry.text.replace(
-    `{${entry.subTableKey}}`,
-    subText !== "" ? subText : `[${entry.subTableKey} not filled]`
-  );
 }
 
 function applyForcedTags(selectedTags, sourceEntry, kurovianFlavour) {

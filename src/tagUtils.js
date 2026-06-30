@@ -76,6 +76,24 @@ function asAction(entry, fallbackName) {
   return getTagText(entry, fallbackName);
 }
 
+function resolveContractText(entry, tags) {
+  if (entry === undefined || entry === null) {
+    return "[contract not filled]";
+  }
+  if (entry.subTableKey === undefined) {
+    return getCleanText(entry.text);
+  }
+  const subEntry = tags[entry.subTableKey];
+  if (subEntry === undefined) {
+    return getCleanText(entry.text);
+  }
+  const subText = getCleanText(subEntry.text);
+  return entry.text.replace(
+    `{${entry.subTableKey}}`,
+    subText !== "" ? subText : `[${entry.subTableKey} not filled]`
+  );
+}
+
 function getWeirdPaymentText(entry) {
   const rewardText = getCleanText(entry.rewardText);
   const text = getCleanText(entry.text);
@@ -134,6 +152,7 @@ module.exports = {
   getTagText,
   asSubject,
   asAction,
+  resolveContractText,
   getWeirdPaymentText,
   getRewardModifier,
   shouldAddAdditionalWeirdPayment,
